@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pheno Hunter · Cannabis Breeder Simulator</title>
+<meta name="description" content="Reality-inspired cannabis breeding strategy simulator. Hunt elite phenotypes, run genetic crosses, stabilize champion cultivars, and consult your AI lab partner.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #070d07;
+  --bg2:      #0b150b;
+  --bg3:      #0e1c0e;
+  --border:   #1a341a;
+  --border2:  #254025;
+  --green:    #6dbf4a;
+  --green2:   #a8e07a;
+  --green3:   #c8f0a0;
+  --dim:      #3a6a3a;
+  --dimmer:   #1e3a1e;
+  --gold:     #e8b820;
+  --gold2:    #f0d060;
+  --amber:    #d07820;
+  --red:      #e05040;
+  --blue:     #50a0e0;
+  --purple:   #b080e8;
+  --thc:      #e060a0;
+  --mono:     'Share Tech Mono', monospace;
+  --sans:     'Rajdhani', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--green2);
+  font-family: var(--mono);
+  font-size: 13px;
+  min-height: 100vh;
+  line-height: 1.5;
+}
+/* ── SCANLINE OVERLAY ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.app { max-width: 960px; margin: 0 auto; padding: 14px 12px; }
+
+/* ── HEADER ── */
+.header {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 14px;
+  margin-bottom: 12px;
+  position: relative;
+}
+.header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; left: 0;
+  width: 60px; height: 2px;
+  background: var(--green);
+}
+.tagline {
+  font-size: 10px;
+  color: var(--dim);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.game-title {
+  font-family: var(--sans);
+  font-size: 36px;
+  font-weight: 600;
+  color: var(--green3);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+.game-subtitle {
+  font-size: 11px;
+  color: var(--dim);
+  letter-spacing: 2px;
+}
+.header-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; flex-wrap: wrap; }
+.header-btns { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+
+/* ── STATS BAR ── */
+.stats-bar {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin-top: 10px;
+}
+.stat-box {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--border2);
+  padding: 6px 8px;
+  border-radius: 3px;
+  text-align: center;
+}
+.stat-label { font-size: 9px; color: var(--dim); letter-spacing: 2px; text-transform: uppercase; }
+.stat-val { font-size: 17px; color: var(--green2); margin-top: 1px; }
+.stat-val.money { color: var(--gold); }
+.stat-val.warn  { color: var(--amber); }
+
+/* ── BUTTONS ── */
+.btn {
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  color: var(--green2);
+  padding: 5px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  user-select: none;
+}
+.btn:hover { background: var(--bg3); border-color: var(--green); color: var(--green3); }
+.btn:active { transform: scale(0.98); }
+.btn.sm { padding: 3px 7px; font-size: 10px; }
+.btn.primary { border-color: #3a8a20; color: #b8f070; background: #0d2208; }
+.btn.primary:hover { background: #142e0a; border-color: var(--green); }
+.btn.gold { border-color: #7a5a10; color: var(--gold); background: #1a1000; }
+.btn.gold:hover { background: #261800; border-color: var(--gold); }
+.btn.danger { border-color: #7a3010; color: #f09050; background: #180a04; }
+.btn.danger:hover { background: #241008; border-color: var(--red); }
+.btn.ai { border-color: #4a2a7a; color: var(--purple); background: #0a0418; }
+.btn.ai:hover { background: #120828; border-color: #7a4ab0; }
+.btn:disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+
+/* ── MAIN GRID ── */
+.main-grid { display: grid; grid-template-columns: 1fr 310px; gap: 10px; }
+
+/* ── PANELS ── */
+.panel {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 10px;
+}
+.panel-title {
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--dimmer);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── SEASON / PHASE BAR ── */
+.season-bar {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.phase-track { display: flex; align-items: center; gap: 3px; flex: 1; }
+.phase-dot {
+  width: 28px; height: 18px;
+  border-radius: 2px;
+  border: 1px solid var(--dimmer);
+  font-size: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.5px;
+  color: var(--dimmer);
+}
+.phase-dot.done    { background: #0d2a08; border-color: #2a6a20; color: var(--green); }
+.phase-dot.active  { background: #1a4010; border-color: var(--green); color: var(--green3); animation: pulseglow 1.5s infinite; }
+.phase-dot.future  { background: var(--bg); }
+.phase-line { flex: 1; height: 1px; background: var(--dimmer); }
+.phase-line.done { background: #2a6a20; }
+@keyframes pulseglow { 0%,100%{opacity:1} 50%{opacity:0.55} }
+
+/* ── GROW VISUAL ── */
+.grow-visual {
+  height: 100px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 8px 12px;
+  gap: 5px;
+  margin-bottom: 8px;
+  position: relative;
+}
+.grow-visual::before {
+  content: 'GROW ROOM';
+  position: absolute;
+  top: 6px; left: 8px;
+  font-size: 9px;
+  color: var(--dimmer);
+  letter-spacing: 2px;
+}
+.light-bar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent 5%, #f0e080 20%, #fff8c0 50%, #f0e080 80%, transparent 95%);
+  opacity: 0.6;
+}
+.plant-viz { display: flex; flex-direction: column; align-items: center; transition: all 0.4s; }
+.p-stem { background: #2d6820; border-radius: 1px; width: 4px; transition: height 0.4s; }
+.p-bud  { border-radius: 50%; margin-bottom: 2px; transition: all 0.4s; }
+
+/* ── TABS ── */
+.tab-bar { display: flex; gap: 4px; margin-bottom: 8px; }
+.tab {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--dim);
+  padding: 4px 12px;
+  border-radius: 3px 3px 0 0;
+  cursor: pointer;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-bottom: none;
+  transition: all 0.12s;
+}
+.tab:hover { color: var(--green2); }
+.tab.active { background: var(--bg2); border-color: var(--border2); color: var(--green); }
+
+/* ── PLANT CARDS ── */
+.plants-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.plant-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 8px;
+  cursor: pointer;
+  position: relative;
+  transition: border-color 0.12s, background 0.12s;
+}
+.plant-card:hover    { border-color: var(--border2); background: #090f09; }
+.plant-card.selected { border-color: var(--green); background: #0a140a; }
+.plant-card.keeper   { border-top: 2px solid var(--blue); }
+.plant-card.champion { border-top: 2px solid var(--gold); }
+.p-score {
+  position: absolute; top: 6px; right: 6px;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  color: var(--green);
+  font-size: 11px; padding: 1px 6px; border-radius: 2px;
+}
+.p-name  { font-size: 12px; color: var(--green3); margin-bottom: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 40px; }
+.p-sub   { font-size: 10px; color: var(--dim); margin-bottom: 5px; }
+.badges  { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 5px; }
+.badge {
+  font-size: 9px; padding: 1px 5px; border-radius: 2px;
+  border: 1px solid;
+  letter-spacing: 0.3px;
+}
+.badge.g { background: #081808; border-color: #1a4a18; color: #70b860; }
+.badge.r { background: #1a0808; border-color: #4a1818; color: #e07070; }
+.badge.b { background: #080818; border-color: #18186a; color: #7070e0; }
+.badge.o { background: #180e00; border-color: #5a3800; color: #c08030; }
+
+/* ── TRAIT BARS ── */
+.trait-bars { display: grid; gap: 3px; }
+.trait-row {
+  display: grid;
+  grid-template-columns: 58px 1fr 28px;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--dim);
+}
+.bar-track { height: 4px; background: #0d180d; border-radius: 2px; overflow: hidden; }
+.bar-fill  { height: 100%; border-radius: 2px; background: linear-gradient(90deg, #2a6a18, #70c840); transition: width 0.3s; }
+.bar-fill.thc { background: linear-gradient(90deg, #a03070, #e060b0); }
+.bar-fill.low { background: linear-gradient(90deg, #6a2a10, #c05020); }
+
+/* ── ACTION PANEL ── */
+.action-group { display: grid; gap: 5px; }
+.action-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px;
+  align-items: center;
+}
+.cost { font-size: 11px; color: var(--gold); text-align: right; white-space: nowrap; font-family: var(--mono); }
+.cost.pos { color: var(--green); }
+
+/* ── LOG ── */
+.log-entry {
+  font-size: 11px;
+  color: var(--dim);
+  padding: 4px 6px;
+  border-left: 2px solid var(--dimmer);
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+.log-entry.event  { color: #c07040; border-color: #5a2a10; }
+.log-entry.win    { color: var(--gold); border-color: #5a4010; }
+.log-entry.breed  { color: var(--blue); border-color: #1a3060; }
+
+/* ── MARKET ── */
+.market-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--bg);
+  font-size: 11px;
+}
+.market-row:last-child { border-bottom: none; }
+.demand-track { width: 90px; height: 3px; background: #0d180d; border-radius: 2px; overflow: hidden; margin-top: 2px; }
+.demand-fill  { height: 100%; background: var(--green); border-radius: 2px; transition: width 0.4s; }
+
+/* ── EVENT BANNER ── */
+.event-banner {
+  border-radius: 3px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  font-size: 11px;
+  display: none;
+  border: 1px solid;
+}
+.event-banner.show      { display: block; background: #1a0800; border-color: #6a3010; color: #e09060; }
+.event-banner.show.good { background: #081a04; border-color: #2a6a18; color: var(--green2); }
+
+/* ── AI PANEL ── */
+.ai-panel {
+  background: #07040f;
+  border: 1px solid #1a0a2a;
+  border-radius: 4px;
+  padding: 10px;
+}
+.ai-title {
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--purple);
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #1a0a2a;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.provider-tabs { display: flex; gap: 4px; margin-bottom: 8px; flex-wrap: wrap; }
+.ptab {
+  background: #0a0414;
+  border: 1px solid #1a0a2a;
+  color: #4a2a7a;
+  padding: 3px 10px;
+  border-radius: 2px;
+  cursor: pointer;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: all 0.12s;
+}
+.ptab:hover { border-color: #3a1a5a; color: #8060b0; }
+.ptab.active          { background: #120830; border-color: #6a3a9a; color: var(--purple); }
+.ptab.active.claude   { border-color: var(--gold); color: var(--gold2); background: #120a00; }
+.ptab.active.grok     { border-color: var(--blue); color: #80d0f8; background: #000e1a; }
+.ptab.active.gemini   { border-color: #4a80e0; color: #90b8f8; background: #00081a; }
+.api-field { margin-bottom: 6px; }
+.api-label { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 3px; color: var(--dim); }
+.api-label.claude { color: #907020; }
+.api-label.grok   { color: #207090; }
+.api-label.gemini { color: #204890; }
+.api-input {
+  width: 100%;
+  background: #050310;
+  border: 1px solid #150a28;
+  color: var(--purple);
+  padding: 5px 7px;
+  border-radius: 3px;
+  font-family: var(--mono);
+  font-size: 10px;
+  outline: none;
+}
+.api-input:focus { border-color: #4a2a7a; }
+.api-input::placeholder { color: #2a1a4a; }
+.api-input.claude { border-color: #2a1a00; color: #c09830; }
+.api-input.claude::placeholder { color: #3a2800; }
+.api-input.claude:focus { border-color: #7a5010; }
+.api-input.grok { border-color: #001a2a; color: #60b0d8; }
+.api-input.grok::placeholder { color: #002030; }
+.api-input.grok:focus { border-color: #005080; }
+.api-input.gemini { border-color: #001028; color: #6090d0; }
+.api-input.gemini::placeholder { color: #001828; }
+.api-input.gemini:focus { border-color: #1a3870; }
+.notes-input {
+  width: 100%;
+  background: #050310;
+  border: 1px solid #150a28;
+  color: #a080d0;
+  padding: 5px 7px;
+  border-radius: 3px;
+  font-family: var(--mono);
+  font-size: 10px;
+  resize: vertical;
+  min-height: 48px;
+  margin-bottom: 6px;
+  outline: none;
+}
+.notes-input:focus { border-color: #4a2a7a; }
+.notes-input::placeholder { color: #2a1a4a; }
+.ai-status {
+  font-size: 10px;
+  padding: 3px 7px;
+  border-radius: 2px;
+  margin-bottom: 5px;
+  display: none;
+  border: 1px solid;
+}
+.ai-status.show         { display: block; background: #0a0420; border-color: #2a1a5a; color: #8060c0; }
+.ai-status.show.s-claude  { background: #0e0800; border-color: #504010; color: #b09030; }
+.ai-status.show.s-grok    { background: #00080e; border-color: #004060; color: #4090c0; }
+.ai-status.show.s-gemini  { background: #00060e; border-color: #103060; color: #4070c0; }
+.ai-status.show.s-error   { background: #100404; border-color: #501010; color: #e06060; }
+.ai-output {
+  background: #040212;
+  border: 1px solid #150a28;
+  border-radius: 3px;
+  padding: 8px;
+  font-size: 10px;
+  color: #a880e0;
+  min-height: 80px;
+  max-height: 200px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  margin-top: 6px;
+  line-height: 1.6;
+  font-family: var(--mono);
+}
+
+/* ── WIN OVERLAY ── */
+.win-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.93);
+  z-index: 500;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.win-overlay.show { display: flex; }
+.win-box {
+  background: var(--bg2);
+  border: 2px solid var(--gold);
+  border-radius: 6px;
+  padding: 36px 40px;
+  max-width: 440px;
+}
+.win-title {
+  font-family: var(--sans);
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--gold);
+  letter-spacing: 6px;
+  margin-bottom: 14px;
+}
+.win-details { color: var(--green2); font-size: 13px; line-height: 1.8; margin-bottom: 20px; }
+
+/* ── HINT ── */
+.hint { font-size: 10px; color: var(--dimmer); margin-top: 5px; letter-spacing: 0.5px; }
+.hint.ready { color: var(--green); }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* ── MOBILE ── */
+@media(max-width: 680px) {
+  .main-grid { grid-template-columns: 1fr; }
+  .stats-bar { grid-template-columns: repeat(3, 1fr); }
+  .plants-grid { grid-template-columns: 1fr; }
+  .game-title { font-size: 26px; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="tagline">Sentinel AI Systems · Pheno Hunter</div>
+        <div class="game-title">Pheno Hunter</div>
+        <div class="game-subtitle">Cannabis Breeder Simulator · Multi-AI Edition</div>
+      </div>
+      <div class="header-btns">
+        <button class="btn sm" onclick="newGame()">NEW GAME</button>
+        <button class="btn sm gold" onclick="saveGame()">SAVE</button>
+        <button class="btn sm" onclick="loadGame()">LOAD</button>
+      </div>
+    </div>
+    <div class="stats-bar">
+      <div class="stat-box"><div class="stat-label">Season</div><div class="stat-val" id="stat-season">1</div></div>
+      <div class="stat-box"><div class="stat-label">Cash</div><div class="stat-val money" id="stat-cash">$2,500</div></div>
+      <div class="stat-box"><div class="stat-label">Best Score</div><div class="stat-val" id="stat-best">—</div></div>
+      <div class="stat-box"><div class="stat-label">Generation</div><div class="stat-val" id="stat-gen">F0</div></div>
+      <div class="stat-box"><div class="stat-label">Win Goal</div><div class="stat-val warn">450 pts</div></div>
+    </div>
+  </div>
+
+  <!-- EVENT BANNER -->
+  <div id="event-banner" class="event-banner"></div>
+
+  <!-- SEASON BAR -->
+  <div class="season-bar">
+    <div style="font-size:10px;color:var(--dim);letter-spacing:2px;white-space:nowrap">GROW CYCLE</div>
+    <div class="phase-track" id="phase-track"></div>
+    <div style="font-size:11px;color:var(--green);letter-spacing:1px;white-space:nowrap" id="phase-label"></div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="main-grid">
+
+    <!-- LEFT COLUMN -->
+    <div>
+      <div class="grow-visual" id="grow-visual">
+        <div class="light-bar"></div>
+      </div>
+
+      <div class="tab-bar">
+        <div class="tab active" onclick="switchTab('seedbank',this)">SEED BANK</div>
+        <div class="tab" onclick="switchTab('market',this)">MARKET</div>
+        <div class="tab" onclick="switchTab('log',this)">FIELD LOG</div>
+      </div>
+
+      <div id="tab-seedbank">
+        <div class="plants-grid" id="plants-grid"></div>
+        <div class="hint" id="select-hint">Click two plants to select as breeding parents</div>
+      </div>
+      <div id="tab-market" style="display:none">
+        <div class="panel">
+          <div class="panel-title">Market Demand · This Season</div>
+          <div id="market-display"></div>
+          <div style="margin-top:8px;font-size:10px;color:var(--dim)">Market rotates each season. Align your best plant with primary demand for peak value.</div>
+        </div>
+      </div>
+      <div id="tab-log" style="display:none">
+        <div class="panel"><div id="log-display"></div></div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div style="display:grid;gap:8px">
+
+      <!-- BEST PLANT -->
+      <div class="panel">
+        <div class="panel-title">🏆 Best Phenotype</div>
+        <div id="best-plant-display"></div>
+      </div>
+
+      <!-- LAB ACTIONS -->
+      <div class="panel">
+        <div class="panel-title">⚗️ Lab Actions</div>
+        <div class="action-group">
+          <div class="action-row">
+            <button class="btn primary" onclick="runGrow()">RUN GROW SEASON</button>
+            <span class="cost" id="cost-grow">-$850</span>
+          </div>
+          <div class="action-row">
+            <button class="btn" onclick="phenotypeTrial()">PHENO TRIAL</button>
+            <span class="cost">-$220</span>
+          </div>
+          <div class="action-row">
+            <button class="btn" onclick="breedSelected()">BREED PARENTS</button>
+            <span class="cost" id="cost-breed">-$445</span>
+          </div>
+          <div class="action-row">
+            <button class="btn" onclick="saveClone()">CLONE BEST</button>
+            <span class="cost">-$160</span>
+          </div>
+          <div class="action-row">
+            <button class="btn" onclick="markKeeper()">TOGGLE KEEPER</button>
+            <span class="cost">FREE</span>
+          </div>
+          <div class="action-row">
+            <button class="btn gold" onclick="sellCuttings()">SELL CUTTINGS</button>
+            <span class="cost pos" id="sell-value">+$0</span>
+          </div>
+          <div class="action-row">
+            <button class="btn gold" onclick="upgradeLab()">UPGRADE LAB</button>
+            <span class="cost" id="cost-lab">-$1,450</span>
+          </div>
+          <div class="action-row">
+            <button class="btn danger" onclick="registerChampion()">REGISTER CHAMPION</button>
+            <span class="cost" style="color:var(--gold)">WIN CHECK</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI LAB PARTNER -->
+      <div class="ai-panel">
+        <div class="ai-title">
+          <span>🧬 AI Lab Partner</span>
+          <span style="font-size:9px;color:#4a2a7a;letter-spacing:1px">BYOK · MULTI-PROVIDER</span>
+        </div>
+
+        <div class="provider-tabs">
+          <div class="ptab active claude" id="ptab-claude" onclick="setProvider('claude',this)">CLAUDE</div>
+          <div class="ptab" id="ptab-grok"   onclick="setProvider('grok',this)">GROK</div>
+          <div class="ptab" id="ptab-gemini" onclick="setProvider('gemini',this)">GEMINI</div>
+          <div class="ptab" id="ptab-local"  onclick="setProvider('local',this)">LOCAL</div>
+        </div>
+
+        <div id="prov-claude">
+          <div class="api-field">
+            <div class="api-label claude">Anthropic API Key</div>
+            <input id="key-claude" class="api-input claude" type="password" placeholder="sk-ant-...">
+          </div>
+        </div>
+        <div id="prov-grok" style="display:none">
+          <div class="api-field">
+            <div class="api-label grok">xAI / Grok API Key</div>
+            <input id="key-grok" class="api-input grok" type="password" placeholder="xai-...">
+          </div>
+        </div>
+        <div id="prov-gemini" style="display:none">
+          <div class="api-field">
+            <div class="api-label gemini">Google Gemini API Key</div>
+            <input id="key-gemini" class="api-input gemini" type="password" placeholder="AIza...">
+          </div>
+        </div>
+        <div id="prov-local" style="display:none">
+          <div class="api-field">
+            <div class="api-label">Local Endpoint (Ollama / LM Studio)</div>
+            <input id="key-local" class="api-input" type="text" placeholder="http://localhost:11434/api/chat">
+          </div>
+        </div>
+
+        <textarea id="lab-notes" class="notes-input" placeholder="Breeding notes: goals, keeper logic, terpene targets, commercial strategy..."></textarea>
+        <div class="ai-status" id="ai-status"></div>
+        <button class="btn ai" onclick="askAI()" style="width:100%;justify-content:center">ASK LAB PARTNER ↗</button>
+        <div class="ai-output" id="ai-output">Lab partner standing by. Select a provider and enter your API key, then ask for analysis after running a grow season.</div>
+      </div>
+
+    </div><!-- /right col -->
+  </div><!-- /main-grid -->
+</div><!-- /app -->
+
+<!-- WIN OVERLAY -->
+<div class="win-overlay" id="win-overlay">
+  <div class="win-box">
+    <div class="win-title">★ CHAMPION ★</div>
+    <div class="win-details" id="win-details"></div>
+    <button class="btn gold" onclick="closeWin()" style="margin:0 auto">CONTINUE BREEDING</button>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════
+   PHENO HUNTER · Cannabis Breeder Simulator
+   v1.0 · github.com/jkh2/pheno-hunter-game
+   Sentinel AI Systems
+   ════════════════════════════════════════════ */
+
+const clamp = (n,a,b) => Math.max(a, Math.min(b, n));
+const rand  = (a,b)   => a + Math.random() * (b - a);
+const pick  = a       => a[Math.floor(Math.random() * a.length)];
+const chance = p      => Math.random() < p;
+const fmt   = n       => '$' + Math.round(n).toLocaleString();
+
+/* ── DATA ── */
+const CULTIVARS = [
+  {name:'Blue Dream',     type:'Sativa Hybrid',    lineage:'Blueberry × Haze',               terpene:'Myrcene',       thc:19,yield:78,vigor:82,stability:63,resin:70,aroma:72,flower:67,difficulty:42,bag:68,resist:66},
+  {name:'Wedding Cake',   type:'Indica Hybrid',    lineage:'Triangle Kush × Animal Mints',   terpene:'Limonene',      thc:24,yield:66,vigor:68,stability:72,resin:88,aroma:91,flower:63,difficulty:58,bag:90,resist:58},
+  {name:'Gelato',         type:'Balanced Hybrid',  lineage:'Sunset Sherbet × Thin Mint GSC', terpene:'Caryophyllene', thc:23,yield:69,vigor:72,stability:68,resin:86,aroma:90,flower:63,difficulty:55,bag:92,resist:61},
+  {name:'Sour Diesel',    type:'Sativa Hybrid',    lineage:'Chemdawg family',                terpene:'Caryophyllene', thc:22,yield:73,vigor:80,stability:54,resin:76,aroma:87,flower:77,difficulty:67,bag:74,resist:54},
+  {name:'Northern Lights',type:'Indica',           lineage:'Afghani × Thai',                 terpene:'Myrcene',       thc:18,yield:76,vigor:75,stability:84,resin:73,aroma:67,flower:56,difficulty:34,bag:62,resist:80},
+  {name:'GG4',            type:'Hybrid',           lineage:'Chem Sister × Sour Dubb',        terpene:'Caryophyllene', thc:25,yield:72,vigor:70,stability:61,resin:92,aroma:84,flower:63,difficulty:62,bag:86,resist:55},
+  {name:'Jack Herer',     type:'Sativa Hybrid',    lineage:'Haze × NL5 × Shiva Skunk',       terpene:'Terpinolene',   thc:20,yield:70,vigor:79,stability:70,resin:72,aroma:78,flower:70,difficulty:51,bag:70,resist:70},
+  {name:'Runtz',          type:'Hybrid',           lineage:'Zkittlez × Gelato',              terpene:'Limonene',      thc:24,yield:62,vigor:66,stability:60,resin:87,aroma:95,flower:63,difficulty:64,bag:95,resist:52},
+];
+
+const DEFECTS  = ['herm tendency','weak stems','low vigor','poor density','mold sensitivity','nutrient sensitivity'];
+const SPECIALS = ['purple fade','fuel nose','candy nose','dense stacking','greasy resin','fast finisher','hash plant','loud terps','compact structure','exceptional vigor'];
+const TERPENES = ['Myrcene','Limonene','Caryophyllene','Terpinolene','Pinene','Linalool','Ocimene'];
+const PHASES   = ['GERM','VEG','FLOWER','CURE','EVAL'];
+const MTRAITS  = ['thc','bag','aroma','yield','resin'];
+const MLABELS  = {thc:'Potency',bag:'Bag Appeal',aroma:'Aroma/Terps',yield:'Heavy Yield',resin:'Resin/Extract'};
+const KEYS     = ['thc','yield','vigor','stability','resin','aroma','bag','resist'];
+
+const EVENTS = [
+  {msg:'MOLD OUTBREAK: Humidity spiked. Resistant plants held better.',  type:'event', effect:G=>{G.plants=G.plants.map(p=>({...p,traits:{...p.traits,yield:clamp(p.traits.yield-p.traits.resist*0.25,10,100)}}));G.cash-=300;}},
+  {msg:'PEST PRESSURE: Spider mites moved in. Checking resistance.',      type:'event', effect:G=>{G.plants=G.plants.map(p=>({...p,traits:{...p.traits,resin:clamp(p.traits.resin-15+p.traits.resist*0.15,10,100)}}));G.cash-=200;}},
+  {msg:'COMPLIANCE CHECK: Paperwork reviewed. $150 admin cost.',          type:'event', effect:G=>{G.cash-=150;}},
+  {msg:'HEAT EVENT: Canopy temps spiked. Vigor scores dipped.',           type:'event', effect:G=>{G.plants=G.plants.map(p=>({...p,traits:{...p.traits,vigor:clamp(p.traits.vigor-12,10,100)}}));G.cash-=100;}},
+  {msg:'PERFECT CONDITIONS: Everything dialed in. Bonus harvest.',         type:'good',  effect:G=>{G.cash+=600;}},
+  {msg:'HERM EXPRESSION: Unstable genetics surfaced. Bag appeal hit.',    type:'event', effect:G=>{G.plants=G.plants.map(p=>p.defects.includes('herm tendency')?{...p,traits:{...p.traits,bag:clamp(p.traits.bag-20,10,100)}}:p);}},
+  {msg:'POWER FLUCTUATION: Lights flickered for 36hrs. Minor veg stress.',type:'event', effect:G=>{G.plants=G.plants.map(p=>({...p,traits:{...p.traits,vigor:clamp(p.traits.vigor-6,10,100)}}));G.cash-=80;}},
+  {msg:'BUMPER TERP SEASON: Aromatic expression off the charts.',          type:'good',  effect:G=>{G.plants=G.plants.map(p=>({...p,traits:{...p.traits,aroma:clamp(p.traits.aroma+8,10,100)}}));G.cash+=200;}},
+];
+
+/* ── GENETICS ENGINE ── */
+function makeAlleles(base) {
+  const al = (t, dom=0.5) => ({
+    a: clamp(base[t]+rand(-12,12), t==='thc'?8:20, t==='thc'?35:100),
+    b: clamp(base[t]+rand(-12,12), t==='thc'?8:20, t==='thc'?35:100),
+    dominance: dom
+  });
+  return { thc:al('thc',0.56), yield:al('yield',0.5), vigor:al('vigor',0.52),
+           stability:al('stability',0.6), resin:al('resin',0.57), aroma:al('aroma',0.62),
+           bag:al('bag',0.55), resist:al('resist',0.55) };
+}
+
+function expressTrait(g, noise, t) {
+  const dom = Math.max(g.a,g.b), rec = Math.min(g.a,g.b);
+  return clamp(dom*g.dominance + rec*(1-g.dominance) + rand(-noise,noise),
+               t==='thc'?8:20, t==='thc'?35:100);
+}
+
+function expressTraits(genes, noise=4) {
+  const out = {};
+  KEYS.forEach(k => out[k] = expressTrait(genes[k], noise, k));
+  return out;
+}
+
+function makePlant(base, gen=0, parents=[], genesOverride=null) {
+  const genes  = genesOverride || makeAlleles(base);
+  const traits = expressTraits(genes, gen ? 7 : 4);
+  const defectRisk = clamp((70-traits.stability)/210 + (base.difficulty||50)/850, 0.02, 0.35);
+  const defects = chance(defectRisk) ? [pick(DEFECTS)] : [];
+  const special = [pick(SPECIALS)];
+  if (chance(0.16)) special.push(pick(SPECIALS.filter(x => !special.includes(x))));
+  const name = gen
+    ? `${parents[0].split(' ')[0]}×${parents[1].split(' ')[0]} F${gen}`
+    : base.name;
+  return {
+    id: crypto.randomUUID(), name, gen,
+    type: base.type || 'Hybrid',
+    lineage: gen ? `${parents[0]} × ${parents[1]}` : base.lineage,
+    terpene: base.terpene || pick(TERPENES),
+    flower:     Math.round(clamp((base.flower||63)+rand(-5,6), 49, 84)),
+    difficulty: Math.round(clamp((base.difficulty||55)+rand(-8,10), 20, 90)),
+    genes, traits, defects, special,
+    cloneSaved: false, keeper: false
+  };
+}
+
+function inheritGene(pa, pb, mc, t) {
+  const aA = pick([pa.a, pa.b]), aB = pick([pb.a, pb.b]);
+  const mut = x => chance(mc) ? x + rand(-9,11) : x;
+  const lo = t==='thc'?8:20, hi = t==='thc'?35:100;
+  return {
+    a: clamp(mut(aA), lo, hi),
+    b: clamp(mut(aB), lo, hi),
+    dominance: clamp((pa.dominance+pb.dominance)/2 + rand(-0.08,0.08), 0.35, 0.75)
+  };
+}
+
+function cross(a, b, gen, lab) {
+  const mc = 0.035 + lab * 0.006;
+  const genes = {};
+  KEYS.forEach(k => genes[k] = inheritGene(a.genes[k], b.genes[k], mc, k));
+  const base = {
+    name: `${a.name}×${b.name}`,
+    type: pick([a.type, b.type, 'Hybrid']),
+    terpene: chance(0.18) ? pick(TERPENES) : pick([a.terpene, b.terpene]),
+    flower: (a.flower+b.flower)/2 + rand(-4,4),
+    difficulty: (a.difficulty+b.difficulty)/2 + rand(-5,5)
+  };
+  const child = makePlant(base, gen, [a.name, b.name], genes);
+  if (chance(0.11 + lab*0.025)) {
+    const k = pick(KEYS);
+    child.traits[k] = clamp(child.traits[k]+rand(5,13), k==='thc'?8:20, k==='thc'?35:100);
+  }
+  if (chance(0.08)) child.defects.push(pick(DEFECTS));
+  return child;
+}
+
+function score(p) {
+  const t = p.traits;
+  return Math.round(clamp(
+    t.thc*3.5 + t.yield*1.05 + t.vigor*0.45 + t.stability*0.65 +
+    t.resin*0.75 + t.aroma*0.65 + t.bag*0.7 + t.resist*0.45 +
+    Math.max(0, 80-p.flower)*0.65 - p.difficulty*0.28 -
+    p.defects.length*24 + (p.keeper?20:0) + (p.cloneSaved?12:0),
+    0, 520
+  ));
+}
+
+function marketValue(p, gen, bonus) {
+  const scarcity   = 1 + Math.min(gen,8)*0.08;
+  const defectDrag = Math.max(0.55, 1 - p.defects.length*0.18);
+  const mk         = bonus ? p.traits[bonus]*0.5 : 0;
+  return Math.round(score(p) * (8.5 + p.traits.bag/18) * scarcity * defectDrag + mk*100);
+}
+
+function generateMarket() {
+  const primary   = pick(MTRAITS);
+  const secondary = pick(MTRAITS.filter(t => t!==primary));
+  const demands   = {};
+  MTRAITS.forEach(t => demands[t] = t===primary ? rand(75,95) : t===secondary ? rand(50,70) : rand(20,45));
+  return { primary, secondary, demands, bonus: primary };
+}
+
+/* ── GAME STATE ── */
+let G = {};
+let currentProvider = 'claude';
+
+function newGame() {
+  G = {
+    cash: 2500, season: 1, gen: 0, lab: 1,
+    plants: CULTIVARS.map(c => makePlant(c, 0)),
+    selected: [], champion: null,
+    log: [{msg:'New game started. Select parents from the seed bank, then breed toward Score 450+.', type:'breed'}],
+    phase: 0, market: generateMarket(), totalSold: 0
+  };
+  renderAll();
+}
+
+function getRanked() { return [...G.plants].sort((a,b) => score(b)-score(a)); }
+
+function addLog(msg, type='') { G.log.unshift({msg,type}); if(G.log.length>20) G.log.pop(); }
+
+function showBanner(msg, type='event') {
+  const b = document.getElementById('event-banner');
+  b.textContent = (type==='good' ? '✓ ' : '⚠ ') + msg;
+  b.className = 'event-banner show' + (type==='good' ? ' good' : '');
+  setTimeout(() => b.className='event-banner', 5500);
+}
+
+/* ── RENDER ── */
+function renderAll() {
+  document.getElementById('stat-season').textContent = G.season;
+  document.getElementById('stat-cash').textContent   = fmt(G.cash);
+  const best = getRanked()[0];
+  document.getElementById('stat-best').textContent   = best ? score(best) : '—';
+  document.getElementById('stat-gen').textContent    = 'F' + G.gen;
+  renderPhases(); renderPlants(); renderBest(); renderGrowVisual(); renderMarket(); renderLog(); updateCosts();
+}
+
+function renderPhases() {
+  const track = document.getElementById('phase-track');
+  track.innerHTML = '';
+  PHASES.forEach((ph, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'phase-dot ' + (i < G.phase ? 'done' : i===G.phase ? 'active' : 'future');
+    dot.textContent = ph.slice(0,3);
+    dot.title = ph;
+    track.appendChild(dot);
+    if (i < PHASES.length-1) {
+      const line = document.createElement('div');
+      line.className = 'phase-line' + (i < G.phase ? ' done' : '');
+      track.appendChild(line);
+    }
+  });
+  document.getElementById('phase-label').textContent = PHASES[G.phase] || 'COMPLETE';
+}
+
+function renderPlants() {
+  const grid = document.getElementById('plants-grid');
+  grid.innerHTML = '';
+  getRanked().forEach(p => {
+    const card = document.createElement('div');
+    const cls  = ['plant-card',
+      G.selected.includes(p.id) ? 'selected' : '',
+      p.keeper ? 'keeper' : '',
+      G.champion && G.champion.id===p.id ? 'champion' : ''
+    ].filter(Boolean).join(' ');
+    card.className = cls;
+    card.onclick = () => toggleSelect(p.id);
+    const mv = marketValue(p, G.gen, G.market.bonus);
+    card.innerHTML = `
+      <div class="p-score">${score(p)}</div>
+      <div class="p-name">${p.name}</div>
+      <div class="p-sub">${p.terpene} · ${p.flower}d · F${p.gen}</div>
+      <div class="badges">
+        ${p.special.map(s=>`<span class="badge g">${s}</span>`).join('')}
+        ${p.defects.map(d=>`<span class="badge r">${d}</span>`).join('')}
+        ${p.cloneSaved?'<span class="badge b">clone</span>':''}
+        ${p.keeper?'<span class="badge b">keeper</span>':''}
+      </div>
+      <div class="trait-bars">
+        <div class="trait-row"><span>THC</span><div class="bar-track"><div class="bar-fill thc" style="width:${(p.traits.thc/35)*100}%"></div></div><span>${p.traits.thc.toFixed(1)}%</span></div>
+        <div class="trait-row"><span>Yield</span><div class="bar-track"><div class="bar-fill" style="width:${p.traits.yield}%"></div></div><span>${Math.round(p.traits.yield)}</span></div>
+        <div class="trait-row"><span>Resin</span><div class="bar-track"><div class="bar-fill" style="width:${p.traits.resin}%"></div></div><span>${Math.round(p.traits.resin)}</span></div>
+        <div class="trait-row"><span>Bag</span><div class="bar-track"><div class="bar-fill${p.traits.bag<50?' low':''}" style="width:${p.traits.bag}%"></div></div><span>${Math.round(p.traits.bag)}</span></div>
+      </div>
+      <div style="font-size:9px;color:var(--dimmer);margin-top:4px">MKT: ${fmt(mv)}</div>`;
+    grid.appendChild(card);
+  });
+  const hint = document.getElementById('select-hint');
+  hint.textContent = G.selected.length===2 ? 'Two parents selected — ready to breed'
+                   : G.selected.length===1  ? 'Select one more parent...'
+                   : 'Click two plants to select as breeding parents';
+  hint.className = 'hint' + (G.selected.length===2 ? ' ready' : '');
+}
+
+function renderBest() {
+  const best = getRanked()[0];
+  const el   = document.getElementById('best-plant-display');
+  if (!best) { el.innerHTML='<div style="color:var(--dimmer);font-size:11px">No plants yet</div>'; return; }
+  const sc = score(best), mv = marketValue(best, G.gen, G.market.bonus);
+  el.innerHTML = `
+    <div class="p-name" style="font-size:13px;padding-right:0;margin-bottom:2px">${best.name}</div>
+    <div class="p-sub">${best.type} · ${best.terpene} · ${best.flower}d</div>
+    <div class="badges" style="margin:5px 0">
+      ${best.special.map(s=>`<span class="badge g">${s}</span>`).join('')}
+      ${best.defects.map(d=>`<span class="badge r">${d}</span>`).join('')}
+    </div>
+    <div class="trait-bars" style="gap:4px">
+      <div class="trait-row"><span>THC</span><div class="bar-track"><div class="bar-fill thc" style="width:${(best.traits.thc/35)*100}%"></div></div><span>${best.traits.thc.toFixed(1)}%</span></div>
+      <div class="trait-row"><span>Yield</span><div class="bar-track"><div class="bar-fill" style="width:${best.traits.yield}%"></div></div><span>${Math.round(best.traits.yield)}</span></div>
+      <div class="trait-row"><span>Stability</span><div class="bar-track"><div class="bar-fill" style="width:${best.traits.stability}%"></div></div><span>${Math.round(best.traits.stability)}</span></div>
+      <div class="trait-row"><span>Resin</span><div class="bar-track"><div class="bar-fill" style="width:${best.traits.resin}%"></div></div><span>${Math.round(best.traits.resin)}</span></div>
+      <div class="trait-row"><span>Bag</span><div class="bar-track"><div class="bar-fill${best.traits.bag<50?' low':''}" style="width:${best.traits.bag}%"></div></div><span>${Math.round(best.traits.bag)}</span></div>
+      <div class="trait-row"><span>Resist</span><div class="bar-track"><div class="bar-fill" style="width:${best.traits.resist}%"></div></div><span>${Math.round(best.traits.resist)}</span></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px">
+      <div class="stat-box" style="padding:5px"><div class="stat-label">Score</div><div class="stat-val">${sc}</div></div>
+      <div class="stat-box" style="padding:5px"><div class="stat-label">Mkt Val</div><div class="stat-val money" style="font-size:13px">${fmt(mv)}</div></div>
+    </div>`;
+  document.getElementById('sell-value').textContent = '+' + fmt(mv);
+}
+
+function renderGrowVisual() {
+  const viz = document.getElementById('grow-visual');
+  const existing = viz.querySelectorAll('.plant-viz');
+  existing.forEach(e => e.remove());
+  getRanked().slice(0, 14).forEach(p => {
+    const h = 16 + G.phase*16 + p.traits.vigor*0.35;
+    const w = 2 + p.traits.yield*0.035;
+    const div = document.createElement('div');
+    div.className = 'plant-viz';
+    div.style.opacity = 0.45 + G.phase*0.11;
+    let bud = '';
+    if (G.phase >= 3) {
+      const bs = 5 + p.traits.resin*0.07;
+      const bc = G.phase>=4 ? '#7a5a18' : '#2a6818';
+      bud = `<div class="p-bud" style="width:${bs}px;height:${bs}px;background:${bc}"></div>`;
+    }
+    div.innerHTML = `${bud}<div class="p-stem" style="height:${h}px;width:${w}px"></div>`;
+    viz.appendChild(div);
+  });
+}
+
+function renderMarket() {
+  const m = G.market;
+  document.getElementById('market-display').innerHTML = MTRAITS.map(t => `
+    <div class="market-row">
+      <div style="flex:1">
+        <div style="color:var(--green2)">${MLABELS[t]}${t===m.primary?' ★':t===m.secondary?' ◆':''}</div>
+        <div class="demand-track"><div class="demand-fill" style="width:${m.demands[t]}%"></div></div>
+      </div>
+      <div style="color:var(--gold);font-size:11px;margin-left:10px">${Math.round(m.demands[t])}%</div>
+    </div>`).join('');
+}
+
+function renderLog() {
+  document.getElementById('log-display').innerHTML =
+    G.log.slice(0,14).map(e => `<div class="log-entry ${e.type||''}">${e.msg}</div>`).join('');
+}
+
+function updateCosts() {
+  document.getElementById('cost-grow').textContent  = `-$${800+G.season*50}`;
+  document.getElementById('cost-breed').textContent = '-$' + (480 - G.lab*35);
+  document.getElementById('cost-lab').textContent   = '-$' + (900 + G.lab*550);
+}
+
+/* ── ACTIONS ── */
+function toggleSelect(id) {
+  if (G.selected.includes(id)) G.selected = G.selected.filter(x => x!==id);
+  else if (G.selected.length >= 2) G.selected = [G.selected[1], id];
+  else G.selected.push(id);
+  renderPlants();
+}
+
+function switchTab(tab, el) {
+  ['seedbank','market','log'].forEach(t => document.getElementById('tab-'+t).style.display = t===tab?'':'none');
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function runGrow() {
+  const cost = 800 + G.season*50;
+  if (G.cash < cost) { addLog('Not enough cash for a grow season.','event'); renderLog(); return; }
+  G.cash -= cost;
+  G.phase = Math.min(G.phase+1, 4);
+  if (G.phase === 4) {
+    G.season++;
+    G.market = generateMarket();
+    G.phase = 0;
+    if (chance(0.32)) {
+      const ev = pick(EVENTS);
+      ev.effect(G);
+      showBanner(ev.msg, ev.type);
+      addLog(ev.msg, 'event');
+    }
+    addLog(`Season ${G.season-1} complete. New market loaded.`, 'breed');
+  } else {
+    addLog(`Phase → ${PHASES[G.phase]}. Cash: ${fmt(G.cash)}.`);
+  }
+  renderAll();
+}
+
+function phenotypeTrial() {
+  if (G.cash < 220) { addLog('Need $220 for a pheno trial.','event'); renderLog(); return; }
+  G.cash -= 220;
+  const noise = Math.max(1.5, 5.5 - G.lab*0.45);
+  G.plants = G.plants.map(p => ({...p, tested:true, traits: expressTraits(p.genes, noise)}));
+  addLog('Pheno trial complete. Trait expression sharpened.','breed');
+  renderAll();
+}
+
+function breedSelected() {
+  if (G.selected.length !== 2) { addLog('Select exactly two parents first.','event'); renderLog(); return; }
+  const cost = 480 - G.lab*35;
+  if (G.cash < cost) { addLog(`Need ${fmt(cost)} to breed.`,'event'); renderLog(); return; }
+  const pa = G.plants.find(p => p.id===G.selected[0]);
+  const pb = G.plants.find(p => p.id===G.selected[1]);
+  if (!pa || !pb) return;
+  G.cash -= cost;
+  const nextGen = G.gen + 1, count = 6 + G.lab*2;
+  const kids    = Array.from({length:count}).map(() => cross(pa, pb, nextGen, G.lab));
+  const keepers = G.plants.filter(p => p.cloneSaved || p.keeper).slice(0,4);
+  const kept    = [...keepers, ...kids, ...getRanked().slice(0,2)]
+                    .sort((a,b) => score(b)-score(a)).slice(0,14);
+  G.plants = kept;
+  G.gen    = nextGen;
+  G.selected = [];
+  addLog(`F${nextGen}: ${pa.name} × ${pb.name}. ${count} offspring produced.`, 'breed');
+  renderAll();
+}
+
+function saveClone() {
+  const best = getRanked()[0];
+  if (!best) return;
+  if (G.cash < 160) { addLog('Need $160 to save a clone.','event'); renderLog(); return; }
+  G.cash -= 160;
+  G.plants = G.plants.map(p => p.id===best.id ? {...p, cloneSaved:true} : p);
+  addLog(`Clone preserved: ${best.name}.`, 'breed');
+  renderAll();
+}
+
+function markKeeper() {
+  const best = getRanked()[0];
+  if (!best) return;
+  G.plants = G.plants.map(p => p.id===best.id ? {...p, keeper:!p.keeper} : p);
+  addLog(`${best.name} keeper status toggled.`);
+  renderAll();
+}
+
+function sellCuttings() {
+  const best = getRanked()[0];
+  if (!best) return;
+  const rev = marketValue(best, G.gen, G.market.bonus);
+  G.cash += rev;
+  G.totalSold = (G.totalSold||0) + rev;
+  addLog(`Sold cuttings from ${best.name}: ${fmt(rev)}.`, 'breed');
+  renderAll();
+}
+
+function upgradeLab() {
+  const cost = 900 + G.lab*550;
+  if (G.cash < cost) { addLog(`Need ${fmt(cost)} to upgrade lab.`,'event'); renderLog(); return; }
+  G.cash -= cost;
+  G.lab++;
+  addLog(`Lab → Level ${G.lab}. Better selection, more offspring, sharper trials.`, 'breed');
+  renderAll();
+}
+
+function registerChampion() {
+  const best = getRanked()[0];
+  if (!best) return;
+  const sc = score(best), mv = marketValue(best, G.gen, G.market.bonus);
+  G.champion = best;
+  addLog(`Champion registered: ${best.name}, Score ${sc}.`, 'win');
+  if (sc >= 450 && mv >= 750000) {
+    document.getElementById('win-details').innerHTML =
+      `<strong>${best.name}</strong><br>
+       Score: ${sc} / 450 ✓<br>
+       Market Value: ${fmt(mv)} / $750k ✓<br>
+       Generation: F${best.gen} · Season ${G.season}<br>
+       Lab Level: ${G.lab}<br>
+       Total Revenue: ${fmt(G.totalSold)}<br><br>
+       This cultivar is now part of cannabis history.`;
+    document.getElementById('win-overlay').className = 'win-overlay show';
+  } else {
+    addLog(`Score ${sc}/450 · Value ${fmt(mv)}/$750k. Keep pushing.`,'event');
+  }
+  renderAll();
+}
+
+function closeWin() { document.getElementById('win-overlay').className = 'win-overlay'; }
+
+function saveGame() {
+  try {
+    localStorage.setItem('phenohunter_v1', JSON.stringify(G));
+    addLog('Game saved to local storage.','breed'); renderLog();
+  } catch(e) { addLog('Save failed — storage unavailable.','event'); renderLog(); }
+}
+
+function loadGame() {
+  try {
+    const s = localStorage.getItem('phenohunter_v1');
+    if (!s) { addLog('No save found.','event'); renderLog(); return; }
+    G = JSON.parse(s);
+    addLog('Game loaded.','breed'); renderAll();
+  } catch(e) { addLog('Load failed.','event'); renderLog(); }
+}
+
+/* ── AI PROVIDER ── */
+function setProvider(p, el) {
+  currentProvider = p;
+  ['claude','grok','gemini','local'].forEach(x => {
+    document.getElementById('prov-'+x).style.display = x===p ? '' : 'none';
+    const t = document.getElementById('ptab-'+x);
+    t.className = 'ptab' + (x===p ? ' active '+x : '');
+  });
+}
+
+function setAIStatus(msg, cls) {
+  const el = document.getElementById('ai-status');
+  el.textContent = msg;
+  el.className = 'ai-status show ' + cls;
+}
+
+async function askAI() {
+  const ranked = getRanked(), best = ranked[0];
+  const chosen = G.plants.filter(p => G.selected.includes(p.id));
+  const notes  = document.getElementById('lab-notes').value.trim();
+  const outEl  = document.getElementById('ai-output');
+
+  const systemPrompt = `You are an expert cannabis breeding AI lab partner inside a strategy simulation game. The player is an experienced real-world grower. Be direct, specific, and speak like a knowledgeable breeder — no disclaimers, no filler. Reference the actual plant data provided. Give 2-3 concrete, actionable recommendations. Win condition: Score 450+ AND market value $750k+.`;
+
+  const gameState = [
+    `SEASON ${G.season} | GEN F${G.gen} | LAB LV${G.lab} | CASH ${fmt(G.cash)}`,
+    '',
+    best ? `BEST PLANT: ${best.name}` : 'BEST PLANT: None',
+    best ? `  Score ${score(best)} | THC ${best.traits.thc.toFixed(1)}% | Yield ${Math.round(best.traits.yield)} | Stability ${Math.round(best.traits.stability)} | Resin ${Math.round(best.traits.resin)} | Bag ${Math.round(best.traits.bag)} | Resist ${Math.round(best.traits.resist)}` : '',
+    best && best.defects.length ? `  Defects: ${best.defects.join(', ')}` : '',
+    best ? `  Special traits: ${best.special.join(', ')}` : '',
+    chosen.length===2 ? `\nSELECTED CROSS: ${chosen[0].name} (${score(chosen[0])}) × ${chosen[1].name} (${score(chosen[1])})` : '',
+    `MARKET THIS SEASON: Primary = ${MLABELS[G.market.primary]}, Secondary = ${MLABELS[G.market.secondary]}`,
+    notes ? `\nBREEDER NOTES:\n${notes}` : ''
+  ].join('\n');
+
+  outEl.textContent = 'Contacting lab partner...';
+
+  try {
+    if (currentProvider === 'claude') {
+      const key = document.getElementById('key-claude').value.trim();
+      setAIStatus('Claude · claude-sonnet-4-20250514 · Anthropic', 's-claude');
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},
+        body: JSON.stringify({model:'claude-sonnet-4-20250514', max_tokens:500, system:systemPrompt, messages:[{role:'user',content:gameState}]})
+      });
+      const data = await res.json();
+      if (data.content?.[0]?.text) { outEl.textContent = data.content[0].text; addLog('Claude analysis complete.','breed'); }
+      else throw new Error(data.error?.message || 'No response from Claude');
+
+    } else if (currentProvider === 'grok') {
+      const key = document.getElementById('key-grok').value.trim();
+      setAIStatus('Grok · grok-3-mini · xAI', 's-grok');
+      const res = await fetch('https://api.x.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','Authorization':'Bearer '+key},
+        body: JSON.stringify({model:'grok-3-mini', max_tokens:500, messages:[{role:'system',content:systemPrompt},{role:'user',content:gameState}]})
+      });
+      const data = await res.json();
+      if (data.choices?.[0]?.message?.content) { outEl.textContent = data.choices[0].message.content; addLog('Grok analysis complete.','breed'); }
+      else throw new Error(data.error?.message || 'No response from Grok');
+
+    } else if (currentProvider === 'gemini') {
+      const key = document.getElementById('key-gemini').value.trim();
+      setAIStatus('Gemini · gemini-2.0-flash · Google', 's-gemini');
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({system_instruction:{parts:[{text:systemPrompt}]}, contents:[{parts:[{text:gameState}]}]})
+      });
+      const data = await res.json();
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (text) { outEl.textContent = text; addLog('Gemini analysis complete.','breed'); }
+      else throw new Error('No response from Gemini');
+
+    } else if (currentProvider === 'local') {
+      const endpoint = document.getElementById('key-local').value.trim() || 'http://localhost:11434/api/chat';
+      setAIStatus('Local model · ' + endpoint, 's-grok');
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({model:'llama3', stream:false, messages:[{role:'system',content:systemPrompt},{role:'user',content:gameState}]})
+      });
+      const data = await res.json();
+      const text = data.message?.content || data.choices?.[0]?.message?.content;
+      if (text) { outEl.textContent = text; addLog('Local model analysis complete.','breed'); }
+      else throw new Error('No response from local model');
+    }
+  } catch(e) {
+    setAIStatus('Error: ' + e.message, 's-error');
+    outEl.textContent = localFallback(best, chosen);
+    addLog('API error — local analysis shown.','event');
+  }
+  renderLog();
+}
+
+function localFallback(best, chosen) {
+  if (!best) return 'No plants to analyze yet.';
+  const sc = score(best), needed = 450 - sc;
+  const lines = [`LAB PARTNER (offline) — Season ${G.season} · F${G.gen}`, ''];
+  lines.push(`Top plant: ${best.name}`);
+  lines.push(`Score ${sc} — need +${needed} more points to reach champion threshold.`);
+  if (best.defects.length) lines.push(`⚠ Defects: ${best.defects.join(', ')} — tighten selection pressure.`);
+  if (best.traits.stability < 65) lines.push(`Low stability (${Math.round(best.traits.stability)}) — run pheno trial before breeding deeper.`);
+  if (best.traits.thc > 25) lines.push(`Strong THC ceiling — cross with a high-stability line to lock it in.`);
+  if (chosen.length===2) lines.push(`Selected cross: ${chosen[0].name} × ${chosen[1].name} — verify trait direction before committing.`);
+  lines.push(`Market favors ${MLABELS[G.market.primary]} — weight that trait in your parent selection.`);
+  lines.push('', '[Add an API key above for live AI breeding analysis]');
+  return lines.join('\n');
+}
+
+/* ── INIT ── */
+newGame();
+</script>
+</body>
+</html>
