@@ -260,6 +260,44 @@ High Resistance and low Difficulty scores protect you from event damage. Unstabl
 
 ---
 
+## The Strain Browser
+
+Click the **🌿 STRAIN BROWSER** button in the top-right of the header to open it.
+
+The browser loads **9,482 real cannabis strains** from the Kushy Cannabis Dataset (MIT licensed, hosted on GitHub). This happens live when you open it — give it a moment on first load.
+
+**Searching and filtering:**
+- Type a name or breeder into the search box to narrow results
+- Use the Type dropdown to filter Indica / Sativa / Hybrid
+- Use the Effect dropdown to find strains known for specific effects (Relaxed, Euphoric, Creative, etc.)
+- Use the Flavor dropdown to find strains by flavor profile (Diesel, Sweet, Citrus, Pine, etc.)
+- Results update instantly — pagination shows 30 strains per page
+
+**Selecting a strain:**
+Click any strain card to select it. A detail panel appears showing:
+- Real effects and flavor data from the dataset
+- Projected game stats — derived from the strain's type, effects, and flavor profile
+- Flowering time, difficulty, and terpene assignment
+
+**Importing a strain:**
+
+| Button | What it does |
+|--------|-------------|
+| **Import as Foundation Cultivar** | Adds the strain to your current seed bank alongside existing plants |
+| **Import + Reset Seed Bank** | Clears your seed bank and starts fresh with the imported strain as your primary cultivar, plus 4 classic foundations |
+
+**How stats are derived:**
+The game has no raw THC/yield data for most strains in the dataset, so it builds stats intelligently:
+- **Type** sets the baseline — Indicas get higher stability and resistance, Sativas get higher vigor and flowering time, Hybrids are balanced
+- **Effects** apply biases — Energetic boosts vigor and yield, Creative boosts aroma and resin, Focused boosts stability and resin, etc.
+- **Flavors** apply biases — Diesel spikes resin and aroma, Sweet/Berry/Citrus spike bag appeal, Earthy/Pine boost resistance
+- **Terpene** is mapped from the dominant flavor if not recorded in the dataset
+- **Light random variance** is added so every import feels slightly different
+
+This means two imports of the same strain will produce slightly different phenotypes — just like popping real seeds.
+
+---
+
 ## Save and Load
 
 **Save** — stores your full game state to your browser's local storage. Use it before closing the tab.
