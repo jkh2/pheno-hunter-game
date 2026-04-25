@@ -3,7 +3,7 @@
 
 > Breed the perfect cultivar. Select parents, chase elite phenotypes across generations, and race the market to register a champion. Multi-AI lab partner included — bring your own key.
 
-**Live:** [jkh2.github.io/pheno-hunter-game](https://jkh2.github.io/pheno-hunter-game)
+**Live:** [jkh2.github.io/pheno-hunter-game](https://jkh2.github.io/pheno-hunter-game) · 📖 [Player Manual](MANUAL.md)
 
 ---
 
