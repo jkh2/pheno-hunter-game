@@ -460,6 +460,80 @@ body::before {
   font-family: var(--mono);
 }
 
+/* ── STRAIN BROWSER ── */
+.strain-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.95); z-index: 600;
+  align-items: flex-start; justify-content: center;
+  padding: 20px 12px; overflow-y: auto;
+}
+.strain-overlay.show { display: flex; }
+.strain-modal {
+  background: var(--bg2); border: 1px solid var(--border2);
+  border-radius: 6px; width: 100%; max-width: 820px;
+  padding: 16px; position: relative;
+}
+.strain-modal-title {
+  font-family: var(--sans); font-size: 18px; font-weight: 600;
+  color: var(--green3); letter-spacing: 2px; text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.strain-modal-sub { font-size: 10px; color: var(--dim); letter-spacing: 1px; margin-bottom: 12px; }
+.strain-search-bar {
+  display: grid; grid-template-columns: 1fr auto auto auto;
+  gap: 6px; margin-bottom: 10px; align-items: center;
+}
+.strain-search-input {
+  background: var(--bg); border: 1px solid var(--border2);
+  color: var(--green2); padding: 6px 10px; border-radius: 3px;
+  font-family: var(--mono); font-size: 12px; outline: none;
+}
+.strain-search-input:focus { border-color: var(--green); }
+.strain-search-input::placeholder { color: var(--dimmer); }
+.strain-filter {
+  background: var(--bg); border: 1px solid var(--border);
+  color: var(--green2); padding: 6px 8px; border-radius: 3px;
+  font-family: var(--mono); font-size: 11px;
+}
+.strain-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 6px; max-height: 480px; overflow-y: auto;
+  padding-right: 4px; margin-bottom: 10px;
+}
+@media(max-width:680px) { .strain-grid { grid-template-columns: 1fr 1fr; } }
+.strain-item {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 3px; padding: 8px; cursor: pointer;
+  transition: border-color 0.12s, background 0.12s;
+  position: relative;
+}
+.strain-item:hover { border-color: var(--green); background: #090f09; }
+.strain-item.selected-strain { border-color: var(--gold); background: #0e0a00; }
+.strain-item-name { font-size: 11px; color: var(--green3); margin-bottom: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.strain-item-sub { font-size: 10px; color: var(--dim); margin-bottom: 4px; }
+.strain-item-tags { display: flex; flex-wrap: wrap; gap: 2px; }
+.strain-tag { font-size: 9px; padding: 1px 4px; border-radius: 2px;
+  border: 1px solid; }
+.strain-tag.indica  { background: #0a0818; border-color: #2a1860; color: #9080d0; }
+.strain-tag.sativa  { background: #100a00; border-color: #503010; color: #d09040; }
+.strain-tag.hybrid  { background: #081208; border-color: #184818; color: #60a050; }
+.strain-tag.effect  { background: #080c18; border-color: #183060; color: #6090d0; font-size:8px; }
+.strain-tag.flavor  { background: #0c0810; border-color: #301840; color: #9060b0; font-size:8px; }
+.strain-detail {
+  background: var(--bg); border: 1px solid var(--border2);
+  border-radius: 3px; padding: 10px; margin-bottom: 10px;
+  display: none;
+}
+.strain-detail.show { display: block; }
+.strain-detail-name { font-size: 16px; color: var(--green3); font-family: var(--sans);
+  font-weight: 600; letter-spacing: 1px; margin-bottom: 4px; }
+.strain-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top:8px; }
+.strain-stat-preview { display: grid; gap: 3px; margin-top: 8px; }
+.strain-count { font-size: 10px; color: var(--dimmer); margin-bottom: 6px; }
+.strain-pagination { display: flex; gap: 6px; align-items: center; justify-content: center; margin-top: 6px; }
+.strain-loading { text-align: center; padding: 40px; color: var(--dim); font-size: 12px; letter-spacing: 2px; }
+
 /* ── WIN OVERLAY ── */
 .win-overlay {
   display: none;
@@ -522,6 +596,7 @@ body::before {
         <button class="btn sm" onclick="newGame()">NEW GAME</button>
         <button class="btn sm gold" onclick="saveGame()">SAVE</button>
         <button class="btn sm" onclick="loadGame()">LOAD</button>
+        <button class="btn sm primary" onclick="openStrainBrowser()">🌿 STRAIN BROWSER</button>
       </div>
     </div>
     <div class="stats-bar">
@@ -670,6 +745,93 @@ body::before {
     </div><!-- /right col -->
   </div><!-- /main-grid -->
 </div><!-- /app -->
+
+<!-- STRAIN BROWSER MODAL -->
+<div class="strain-overlay" id="strain-overlay">
+  <div class="strain-modal">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+      <div>
+        <div class="strain-modal-title">🌿 Strain Browser</div>
+        <div class="strain-modal-sub" id="sb-source-label">Loading dataset from Kushy Cannabis Dataset (GitHub · MIT License)...</div>
+      </div>
+      <button class="btn sm danger" onclick="closeStrainBrowser()">✕ CLOSE</button>
+    </div>
+
+    <div class="strain-search-bar">
+      <input id="sb-search" class="strain-search-input" placeholder="Search strains by name or breeder..." oninput="sbSearch()">
+      <select id="sb-type" class="strain-filter" onchange="sbSearch()">
+        <option value="">All Types</option>
+        <option value="Indica">Indica</option>
+        <option value="Sativa">Sativa</option>
+        <option value="Hybrid">Hybrid</option>
+      </select>
+      <select id="sb-effect" class="strain-filter" onchange="sbSearch()">
+        <option value="">All Effects</option>
+        <option value="Relaxed">Relaxed</option>
+        <option value="Euphoric">Euphoric</option>
+        <option value="Happy">Happy</option>
+        <option value="Creative">Creative</option>
+        <option value="Energetic">Energetic</option>
+        <option value="Focused">Focused</option>
+        <option value="Sleepy">Sleepy</option>
+        <option value="Uplifted">Uplifted</option>
+        <option value="Talkative">Talkative</option>
+        <option value="Hungry">Hungry</option>
+      </select>
+      <select id="sb-flavor" class="strain-filter" onchange="sbSearch()">
+        <option value="">All Flavors</option>
+        <option value="Earthy">Earthy</option>
+        <option value="Sweet">Sweet</option>
+        <option value="Citrus">Citrus</option>
+        <option value="Pine">Pine</option>
+        <option value="Berry">Berry</option>
+        <option value="Diesel">Diesel</option>
+        <option value="Lemon">Lemon</option>
+        <option value="Grape">Grape</option>
+        <option value="Mint">Mint</option>
+        <option value="Tropical">Tropical</option>
+        <option value="Blueberry">Blueberry</option>
+        <option value="Skunk">Skunk</option>
+        <option value="Vanilla">Vanilla</option>
+        <option value="Coffee">Coffee</option>
+      </select>
+    </div>
+
+    <div class="strain-count" id="sb-count"></div>
+
+    <!-- SELECTED STRAIN DETAIL -->
+    <div class="strain-detail" id="sb-detail">
+      <div class="strain-detail-name" id="sb-detail-name"></div>
+      <div style="font-size:11px;color:var(--dim)" id="sb-detail-sub"></div>
+      <div class="strain-detail-grid">
+        <div>
+          <div style="font-size:10px;color:var(--dim);margin-bottom:4px;letter-spacing:1px">EFFECTS</div>
+          <div id="sb-detail-effects" style="font-size:11px;color:var(--green2)"></div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--dim);margin-bottom:4px;letter-spacing:1px">FLAVORS</div>
+          <div id="sb-detail-flavors" style="font-size:11px;color:var(--purple)"></div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--dim);margin-top:8px;letter-spacing:1px">PROJECTED GAME STATS</div>
+      <div class="strain-stat-preview" id="sb-stat-preview"></div>
+      <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn primary" onclick="importSelectedStrain()">⬇ IMPORT AS FOUNDATION CULTIVAR</button>
+        <button class="btn" onclick="importAndReplace()">⬇ IMPORT + RESET SEED BANK</button>
+        <span style="font-size:10px;color:var(--dim);align-self:center">Import adds to your current seed bank</span>
+      </div>
+    </div>
+
+    <!-- STRAIN GRID -->
+    <div class="strain-grid" id="sb-grid">
+      <div class="strain-loading" id="sb-loading">FETCHING DATASET...<br><br>
+        <div style="font-size:10px;margin-top:8px">Loading 9,000+ strains from Kushy Cannabis Dataset</div>
+      </div>
+    </div>
+
+    <div class="strain-pagination" id="sb-pagination"></div>
+  </div>
+</div>
 
 <!-- WIN OVERLAY -->
 <div class="win-overlay" id="win-overlay">
@@ -1243,6 +1405,383 @@ function localFallback(best, chosen) {
   lines.push(`Market favors ${MLABELS[G.market.primary]} — weight that trait in your parent selection.`);
   lines.push('', '[Add an API key above for live AI breeding analysis]');
   return lines.join('\n');
+}
+
+/* ════════════════════════════════════════════
+   STRAIN BROWSER ENGINE
+   Data: Kushy Cannabis Dataset (MIT License)
+   github.com/kushyapp/cannabis-dataset
+   ════════════════════════════════════════════ */
+
+const KUSHY_URL = 'https://raw.githubusercontent.com/kushyapp/cannabis-dataset/master/Dataset/Strains/strains-kushy_api.2017-11-14.csv';
+
+let SB = {
+  raw: [],        // all parsed strains from dataset
+  filtered: [],   // current filtered/searched results
+  selected: null, // currently selected strain object
+  page: 0,
+  perPage: 30,
+  loaded: false,
+  loading: false,
+};
+
+// Flavor → terpene mapping for game stat derivation
+const FLAVOR_TERPENE = {
+  'Citrus':'Limonene','Lemon':'Limonene','Orange':'Limonene','Lime':'Limonene',
+  'Pine':'Pinene','Earthy':'Myrcene','Mango':'Myrcene','Berry':'Myrcene',
+  'Skunk':'Myrcene','Grape':'Myrcene','Blueberry':'Myrcene',
+  'Pepper':'Caryophyllene','Spicy':'Caryophyllene','Diesel':'Caryophyllene',
+  'Lavender':'Linalool','Floral':'Linalool','Rose':'Linalool',
+  'Sweet':'Terpinolene','Vanilla':'Terpinolene','Pineapple':'Terpinolene','Tropical':'Terpinolene',
+  'Mint':'Ocimene','Cheese':'Ocimene','Ammonia':'Ocimene',
+};
+
+// Effect → stat bias mappings
+const EFFECT_BIAS = {
+  'Relaxed':    {stability:+8, vigor:-3},
+  'Sleepy':     {stability:+6, vigor:-6, resist:-3},
+  'Euphoric':   {aroma:+6, bag:+5},
+  'Happy':      {bag:+4, aroma:+4},
+  'Creative':   {aroma:+8, resin:+4},
+  'Energetic':  {vigor:+8, yield:+5},
+  'Focused':    {stability:+5, resin:+5},
+  'Uplifted':   {vigor:+5, bag:+4},
+  'Talkative':  {aroma:+6, bag:+3},
+  'Hungry':     {yield:+8, vigor:+3},
+  'Tingly':     {thc:+2, resin:+6},
+  'Giggly':     {bag:+5, aroma:+4},
+};
+
+// Flavor → stat bias
+const FLAVOR_BIAS = {
+  'Earthy':   {resist:+5, stability:+4},
+  'Pine':     {resist:+6, vigor:+4},
+  'Diesel':   {resin:+8, aroma:+6},
+  'Skunk':    {aroma:+8, resin:+5},
+  'Sweet':    {bag:+8, aroma:+5},
+  'Citrus':   {aroma:+8, bag:+6},
+  'Berry':    {bag:+7, aroma:+6},
+  'Blueberry':{bag:+8, aroma:+7},
+  'Grape':    {bag:+6, aroma:+5},
+  'Tropical': {aroma:+8, bag:+7},
+  'Lavender': {aroma:+9, stability:+4},
+  'Vanilla':  {bag:+7, aroma:+6},
+  'Coffee':   {resin:+6, stability:+3},
+  'Cheese':   {aroma:+7, resin:+5},
+  'Mint':     {aroma:+6, resist:+3},
+};
+
+// Type base stats
+const TYPE_BASE = {
+  'Indica':  {thc:20, yield:72, vigor:68, stability:76, resin:74, aroma:70, bag:68, resist:75, flower:58, difficulty:38},
+  'Sativa':  {thc:19, yield:70, vigor:80, stability:60, resin:68, aroma:78, bag:70, resist:62, flower:72, difficulty:52},
+  'Hybrid':  {thc:22, yield:71, vigor:73, stability:67, resin:76, aroma:76, bag:74, resist:66, flower:63, difficulty:48},
+};
+
+function parseCSV(text) {
+  const lines = text.split('\n');
+  if (!lines.length) return [];
+  const headers = parseCSVLine(lines[0]);
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    if (!lines[i].trim()) continue;
+    const vals = parseCSVLine(lines[i]);
+    if (vals.length < 2) continue;
+    const obj = {};
+    headers.forEach((h, idx) => obj[h] = vals[idx] || '');
+    rows.push(obj);
+  }
+  return rows;
+}
+
+function parseCSVLine(line) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      inQuotes = !inQuotes;
+    } else if (ch === ',' && !inQuotes) {
+      result.push(current.trim());
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  result.push(current.trim());
+  return result;
+}
+
+function cleanField(val) {
+  if (!val || val === 'NULL' || val === 'null' || val === '0') return '';
+  return val.trim();
+}
+
+function deriveGameStats(strain) {
+  // Start from type base
+  const type = strain.type in TYPE_BASE ? strain.type : 'Hybrid';
+  const base = { ...TYPE_BASE[type] };
+
+  // Apply effect biases
+  const effects = cleanField(strain.effects);
+  if (effects) {
+    effects.split(',').forEach(e => {
+      const eb = EFFECT_BIAS[e.trim()];
+      if (eb) Object.keys(eb).forEach(k => { if (base[k] !== undefined) base[k] += eb[k]; });
+    });
+  }
+
+  // Apply flavor biases + derive terpene
+  const flavor = cleanField(strain.flavor);
+  let terpene = cleanField(strain.terpenes) || '';
+  if (flavor) {
+    const flavorList = flavor.split(',').map(f => f.trim());
+    flavorList.forEach(f => {
+      const fb = FLAVOR_BIAS[f];
+      if (fb) Object.keys(fb).forEach(k => { if (base[k] !== undefined) base[k] += fb[k]; });
+      if (!terpene && FLAVOR_TERPENE[f]) terpene = FLAVOR_TERPENE[f];
+    });
+  }
+
+  // Clamp all stats
+  const clampStat = (v, t) => Math.round(clamp(v + rand(-6,6), t==='thc'?10:25, t==='thc'?33:96));
+  return {
+    thc:        clampStat(base.thc, 'thc'),
+    yield:      clampStat(base.yield),
+    vigor:      clampStat(base.vigor),
+    stability:  clampStat(base.stability),
+    resin:      clampStat(base.resin),
+    aroma:      clampStat(base.aroma),
+    bag:        clampStat(base.bag),
+    resist:     clampStat(base.resist),
+    flower:     Math.round(clamp(base.flower + rand(-6,6), 49, 84)),
+    difficulty: Math.round(clamp(base.difficulty + rand(-8,8), 20, 80)),
+    terpene:    terpene || pick(TERPENES),
+  };
+}
+
+function strainToPlant(strain) {
+  const stats = deriveGameStats(strain);
+  const base = {
+    name:       strain.name,
+    type:       strain.type + (strain.type==='Indica'?' Landrace':strain.type==='Sativa'?' Landrace':' Hybrid'),
+    lineage:    cleanField(strain.breeder) ? `Breeder: ${strain.breeder}` : 'Unknown lineage',
+    terpene:    stats.terpene,
+    thc:        stats.thc,
+    yield:      stats.yield,
+    vigor:      stats.vigor,
+    stability:  stats.stability,
+    resin:      stats.resin,
+    aroma:      stats.aroma,
+    bag:        stats.bag,
+    resist:     stats.resist,
+    flower:     stats.flower,
+    difficulty: stats.difficulty,
+  };
+  return makePlant(base, 0);
+}
+
+async function loadStrainDataset() {
+  if (SB.loaded || SB.loading) return;
+  SB.loading = true;
+  document.getElementById('sb-loading').innerHTML =
+    'FETCHING DATASET...<br><br><div style="font-size:10px;margin-top:8px">Connecting to Kushy Cannabis Dataset on GitHub...</div>';
+
+  try {
+    const resp = await fetch(KUSHY_URL);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const text = await resp.text();
+    const rows = parseCSV(text);
+
+    SB.raw = rows.filter(r =>
+      r.name && r.name !== 'NULL' &&
+      r.type && ['Indica','Sativa','Hybrid'].includes(r.type)
+    );
+    SB.loaded = true;
+    SB.loading = false;
+
+    document.getElementById('sb-source-label').textContent =
+      `Kushy Cannabis Dataset · ${SB.raw.length.toLocaleString()} strains · MIT License · github.com/kushyapp/cannabis-dataset`;
+
+    sbSearch();
+  } catch(e) {
+    SB.loading = false;
+    document.getElementById('sb-loading').innerHTML =
+      `<span style="color:var(--red)">Failed to load dataset: ${e.message}</span><br><br>
+       <div style="font-size:10px;color:var(--dim)">Check your connection and try again.</div>
+       <br><button class="btn sm" onclick="SB.loaded=false;SB.loading=false;loadStrainDataset()">RETRY</button>`;
+  }
+}
+
+function sbSearch() {
+  if (!SB.loaded) return;
+  const query  = document.getElementById('sb-search').value.toLowerCase().trim();
+  const type   = document.getElementById('sb-type').value;
+  const effect = document.getElementById('sb-effect').value;
+  const flavor = document.getElementById('sb-flavor').value;
+
+  SB.filtered = SB.raw.filter(r => {
+    if (type   && r.type !== type) return false;
+    if (effect && !(r.effects||'').includes(effect)) return false;
+    if (flavor && !(r.flavor||'').includes(flavor)) return false;
+    if (query) {
+      const name    = (r.name||'').toLowerCase();
+      const breeder = (r.breeder||'').toLowerCase();
+      if (!name.includes(query) && !breeder.includes(query)) return false;
+    }
+    return true;
+  });
+
+  SB.page = 0;
+  renderStrainGrid();
+}
+
+function renderStrainGrid() {
+  const grid = document.getElementById('sb-grid');
+  const count = document.getElementById('sb-count');
+  const pagination = document.getElementById('sb-pagination');
+
+  const total = SB.filtered.length;
+  const start = SB.page * SB.perPage;
+  const end   = Math.min(start + SB.perPage, total);
+  const page  = SB.filtered.slice(start, end);
+
+  count.textContent = `${total.toLocaleString()} strains found · showing ${start+1}–${end}`;
+
+  grid.innerHTML = '';
+  if (page.length === 0) {
+    grid.innerHTML = '<div class="strain-loading" style="grid-column:1/-1">No strains match your filters.</div>';
+  } else {
+    page.forEach(strain => {
+      const div = document.createElement('div');
+      const isSelected = SB.selected && SB.selected.name === strain.name;
+      div.className = 'strain-item' + (isSelected ? ' selected-strain' : '');
+      div.onclick = () => selectStrain(strain);
+
+      const typeClass = strain.type.toLowerCase();
+      const effects = cleanField(strain.effects);
+      const flavors = cleanField(strain.flavor);
+      const effectTags = effects ? effects.split(',').slice(0,3).map(e=>
+        `<span class="strain-tag effect">${e.trim()}</span>`).join('') : '';
+      const flavorTags = flavors ? flavors.split(',').slice(0,2).map(f=>
+        `<span class="strain-tag flavor">${f.trim()}</span>`).join('') : '';
+      const breeder = cleanField(strain.breeder);
+
+      div.innerHTML = `
+        <div class="strain-item-name">${strain.name}</div>
+        <div class="strain-item-sub">
+          <span class="strain-tag ${typeClass}">${strain.type}</span>
+          ${breeder ? `<span style="font-size:9px;color:var(--dimmer);margin-left:4px">${breeder.slice(0,22)}${breeder.length>22?'...':''}</span>` : ''}
+        </div>
+        <div class="strain-item-tags">${effectTags}${flavorTags}</div>`;
+      grid.appendChild(div);
+    });
+  }
+
+  // Pagination
+  const totalPages = Math.ceil(total / SB.perPage);
+  pagination.innerHTML = '';
+  if (totalPages > 1) {
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'btn sm';
+    prevBtn.textContent = '← PREV';
+    prevBtn.disabled = SB.page === 0;
+    prevBtn.onclick = () => { SB.page--; renderStrainGrid(); };
+    pagination.appendChild(prevBtn);
+
+    const pageInfo = document.createElement('span');
+    pageInfo.style.cssText = 'font-size:10px;color:var(--dim);padding:0 8px';
+    pageInfo.textContent = `Page ${SB.page+1} of ${totalPages}`;
+    pagination.appendChild(pageInfo);
+
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'btn sm';
+    nextBtn.textContent = 'NEXT →';
+    nextBtn.disabled = SB.page >= totalPages - 1;
+    nextBtn.onclick = () => { SB.page++; renderStrainGrid(); };
+    pagination.appendChild(nextBtn);
+  }
+}
+
+function selectStrain(strain) {
+  SB.selected = strain;
+  const detail = document.getElementById('sb-detail');
+  detail.className = 'strain-detail show';
+
+  document.getElementById('sb-detail-name').textContent = strain.name;
+  const breeder = cleanField(strain.breeder);
+  document.getElementById('sb-detail-sub').textContent =
+    `${strain.type} · ${breeder ? 'Breeder: '+breeder : 'Unknown breeder'}`;
+
+  const effects = cleanField(strain.effects);
+  document.getElementById('sb-detail-effects').textContent = effects || 'Not recorded';
+
+  const flavors = cleanField(strain.flavor);
+  document.getElementById('sb-detail-flavors').textContent = flavors || 'Not recorded';
+
+  // Show projected stats
+  const stats = deriveGameStats(strain);
+  const preview = document.getElementById('sb-stat-preview');
+  const statDefs = [
+    {k:'thc',label:'THC',max:33},
+    {k:'yield',label:'Yield',max:100},
+    {k:'stability',label:'Stability',max:100},
+    {k:'resin',label:'Resin',max:100},
+    {k:'aroma',label:'Aroma',max:100},
+    {k:'bag',label:'Bag Appeal',max:100},
+    {k:'resist',label:'Resistance',max:100},
+  ];
+  preview.innerHTML = statDefs.map(s => {
+    const val = stats[s.k];
+    const pct = (val/s.max)*100;
+    const isThc = s.k==='thc';
+    return `<div class="trait-row">
+      <span>${s.label}</span>
+      <div class="bar-track"><div class="bar-fill${isThc?' thc':''}" style="width:${pct}%"></div></div>
+      <span>${val}${isThc?'%':''}</span>
+    </div>`;
+  }).join('') + `<div style="font-size:9px;color:var(--dimmer);margin-top:4px">
+    Flower: ${stats.flower}d · Difficulty: ${stats.difficulty} · Terpene: ${stats.terpene} · Stats include randomized variance</div>`;
+
+  // Re-render grid to show selection
+  renderStrainGrid();
+}
+
+function importSelectedStrain() {
+  if (!SB.selected) return;
+  const plant = strainToPlant(SB.selected);
+  G.plants.push(plant);
+  // Keep top 14
+  G.plants = G.plants.sort((a,b) => score(b)-score(a)).slice(0,14);
+  addLog(`Imported foundation cultivar: ${plant.name} (${plant.type}, ${plant.terpene}).`, 'breed');
+  closeStrainBrowser();
+  renderAll();
+}
+
+function importAndReplace() {
+  if (!SB.selected) return;
+  const plant = strainToPlant(SB.selected);
+  // Reset to just this cultivar + keep a few foundation ones
+  G.plants = [plant, ...CULTIVARS.slice(0,4).map(c => makePlant(c, 0))];
+  G.gen = 0;
+  G.selected = [];
+  addLog(`Seed bank reset with ${plant.name} as primary foundation cultivar.`, 'breed');
+  closeStrainBrowser();
+  renderAll();
+}
+
+function openStrainBrowser() {
+  document.getElementById('strain-overlay').className = 'strain-overlay show';
+  document.body.style.overflow = 'hidden';
+  if (!SB.loaded && !SB.loading) loadStrainDataset();
+}
+
+function closeStrainBrowser() {
+  document.getElementById('strain-overlay').className = 'strain-overlay';
+  document.body.style.overflow = '';
+  SB.selected = null;
+  document.getElementById('sb-detail').className = 'strain-detail';
 }
 
 /* ── INIT ── */
