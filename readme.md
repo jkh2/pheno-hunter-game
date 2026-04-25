@@ -1,0 +1,125 @@
+# 🌿 Pheno Hunter
+### Cannabis Breeder Simulator · Multi-AI Edition
+
+> Breed the perfect cultivar. Select parents, chase elite phenotypes across generations, and race the market to register a champion. Multi-AI lab partner included — bring your own key.
+
+**Live:** [jkh2.github.io/pheno-hunter-game](https://jkh2.github.io/pheno-hunter-game)
+
+---
+
+## What It Is
+
+Pheno Hunter is a reality-inspired cannabis breeding strategy simulator. You're not watering plants — you're making breeder decisions: selecting parents, running phenotype trials, hunting keeper expressions, stabilizing genetics across generations, and reading market demand to time your releases.
+
+The genetic engine models dominant/recessive trait inheritance, phenotype variance, mutation events, and defect risk — based on the real logic experienced breeders use.
+
+---
+
+## Game Loop
+
+1. **Start with real-world foundation cultivars** — Blue Dream, Wedding Cake, Gelato, GG4, Runtz, and more
+2. **Run grow seasons** — 5 phases per cycle (Germ → Veg → Flower → Cure → Eval)
+3. **Run phenotype trials** — sharpen hidden trait expression before selecting parents
+4. **Select two parents and breed** — genetic inheritance produces offspring with trait variation, mutation events, special expressions, and defect risk
+5. **Clone keepers** — preserve elite phenotypes before culling
+6. **Watch the market** — demand rotates each season (potency vs. bag appeal vs. yield vs. terps)
+7. **Sell licensed cuttings** — generate revenue to upgrade your lab
+8. **Upgrade the lab** — better selection accuracy, more offspring per cross, sharper trials
+9. **Register a Champion** — hit Score 450+ and $750k market value to win
+
+---
+
+## AI Lab Partner
+
+The Lab Partner reads your current game state — best plant data, selected cross, market conditions, and your breeding notes — and gives specific, actionable analysis from the perspective of an expert breeder.
+
+**Supported providers (BYOK):**
+
+| Provider | Model | Key format |
+|----------|-------|-----------|
+| **Claude** (Anthropic) | claude-sonnet-4-20250514 | `sk-ant-...` |
+| **Grok** (xAI) | grok-3-mini | `xai-...` |
+| **Gemini** (Google) | gemini-2.0-flash | `AIza...` |
+| **Local** | Ollama / LM Studio | endpoint URL |
+
+Keys are never stored — they live only in the browser session. A local fallback analysis runs if no key is entered.
+
+---
+
+## Trait System
+
+| Trait | Affects |
+|-------|---------|
+| THC (Potency) | Score weight (3.5x), market demand cycles |
+| Yield | Score weight (1.05x), revenue base |
+| Vigor | Growth speed, event resistance |
+| Stability | Defect risk, phenotype consistency |
+| Resin | Score weight, extract market value |
+| Aroma / Terpenes | Score weight, market demand cycles |
+| Bag Appeal | Score weight, market value multiplier |
+| Resistance | Mold/pest/heat event damage reduction |
+| Flowering Time | Shorter = season efficiency bonus |
+| Difficulty | Defect risk modifier |
+
+---
+
+## Scoring
+
+```
+Score = THC×3.5 + Yield×1.05 + Vigor×0.45 + Stability×0.65
+      + Resin×0.75 + Aroma×0.65 + BagAppeal×0.7 + Resist×0.45
+      + FlowerBonus - DifficultyPenalty - DefectPenalty×24
+      + KeeperBonus + CloneBonus
+```
+
+**Win condition:** Score ≥ 450 AND market value ≥ $750,000
+
+---
+
+## Random Events
+
+Each completed season has a 32% chance of triggering an event:
+
+- **Mold Outbreak** — damages yield, reduced by resistance
+- **Pest Pressure** — hits resin, reduced by resistance
+- **Heat Event** — drops vigor scores
+- **Compliance Inspection** — flat cash cost
+- **Herm Expression** — bag appeal penalty on unstable plants
+- **Power Fluctuation** — light stress, minor vigor hit
+- **Perfect Conditions** — bonus cash harvest
+- **Bumper Terp Season** — aroma spike + bonus revenue
+
+---
+
+## Deployment
+
+Single `index.html` — no build step, no dependencies, no framework.
+
+**GitHub Pages:**
+1. Fork or clone this repo
+2. Go to Settings → Pages → Source: main branch / root
+3. Done — live at `yourusername.github.io/pheno-hunter-game`
+
+---
+
+## Tech
+
+- Vanilla JS, HTML5, CSS3
+- Google Fonts: Share Tech Mono + Rajdhani
+- No npm, no build, no framework
+- localStorage save/load
+- Multi-provider AI via direct fetch (Claude, Grok, Gemini, local Ollama)
+
+---
+
+## Credits
+
+Built by **James Keith Harwood II** · [Sentinel AI Systems](https://jameskeithharwood.com)  
+AI development partner: **Claude Sentinel** (Anthropic)
+
+Cultivar data is reality-inspired game abstraction — not grow instructions.  
+All gameplay takes place in a fictional simulation context.
+
+---
+
+*"The endgame is an AI-assisted lab partner that helps analyze your breeding program."*
