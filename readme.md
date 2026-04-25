@@ -91,6 +91,23 @@ Each completed season has a 32% chance of triggering an event:
 
 ---
 
+## Strain Browser
+
+Pheno Hunter includes a live strain browser powered by the **Kushy Cannabis Dataset** (MIT License, hosted on GitHub).
+
+- **9,482 real strains** loaded directly from the dataset on demand
+- Search by name or breeder
+- Filter by type (Indica / Sativa / Hybrid), effect, and flavor
+- Select any strain to preview its projected game stats before importing
+- **Import as Foundation Cultivar** — adds the strain to your current seed bank
+- **Import + Reset Seed Bank** — starts fresh with your chosen strain as the primary cultivar
+
+Game stats (THC, Yield, Vigor, Stability, Resin, Aroma, Bag Appeal, Resistance) are algorithmically derived from the real strain data — type sets the baseline, effects and flavor profiles apply stat biases, and light random variance is added so no two imports are identical.
+
+Data source: [github.com/kushyapp/cannabis-dataset](https://github.com/kushyapp/cannabis-dataset) · MIT License
+
+---
+
 ## Deployment
 
 Single `index.html` — no build step, no dependencies, no framework.
