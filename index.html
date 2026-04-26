@@ -1002,6 +1002,10 @@ function showBanner(msg, type='event') {
 }
 
 /* ── RENDER ── */
+function winMV() {
+  return 10000 + Math.max(0, 3 - G.gen) * 4000;
+}
+
 function renderAll() {
   document.getElementById('stat-season').textContent = G.season;
   document.getElementById('stat-cash').textContent   = fmt(G.cash);
@@ -1011,7 +1015,7 @@ function renderAll() {
   document.getElementById('stat-gen').textContent    = 'F' + G.gen;
 
   // Track personal best and update champion button
-  const WIN_SCORE = 450, WIN_MV = 12000;
+  const WIN_SCORE = 450, WIN_MV = winMV();
   const mv = best ? marketValue(best, G.gen, G.market.bonus) : 0;
   const champBtn    = document.getElementById('btn-champ');
   const champStatus = document.getElementById('champ-status');
@@ -1580,17 +1584,18 @@ function registerChampion() {
   const best = getRanked()[0];
   if (!best) return;
   const sc = score(best), mv = marketValue(best, G.gen, G.market.bonus);
-  const WIN_SCORE = 450, WIN_MV = 12000;
+  const WIN_SCORE = 450, WIN_MV = winMV();
   G.champion = best;
   addLog(`Champion registered: ${best.name}, Score ${sc}, Value ${fmt(mv)}.`, 'win');
   if (sc >= WIN_SCORE && mv >= WIN_MV) {
+    const earlyBonus = G.gen <= 1 ? '<br><br>⚡ Early generation win — exceptional genetics.' : '';
     document.getElementById('win-details').innerHTML =
       `<strong>${best.name}</strong><br>
        Score: ${sc} / ${WIN_SCORE} ✓<br>
-       Market Value: ${fmt(mv)} ✓<br>
+       Market Value: ${fmt(mv)} / ${fmt(WIN_MV)} ✓<br>
        Generation: F${best.gen} · Season ${G.season}<br>
        Lab Level: ${G.lab}<br>
-       Total Revenue: ${fmt(G.totalSold)}<br><br>
+       Total Revenue: ${fmt(G.totalSold)}${earlyBonus}<br><br>
        This cultivar is now part of cannabis history.`;
     document.getElementById('win-overlay').className = 'win-overlay show';
   } else {
@@ -1598,7 +1603,7 @@ function registerChampion() {
     const mvGap    = Math.max(0, WIN_MV - mv);
     let feedback = [];
     if (scoreGap > 0) feedback.push(`Need +${scoreGap} more score points`);
-    if (mvGap > 0)    feedback.push(`Need ${fmt(mvGap)} more market value — sell in a primary demand season`);
+    if (mvGap > 0)    feedback.push(`Need ${fmt(mvGap)} more market value${G.gen < 3 ? ` (easier at F3+ — current threshold ${fmt(WIN_MV)})` : ' — sell in a primary demand season'}`);
     addLog(feedback.join(' · '), 'event');
   }
   renderAll();
@@ -1644,7 +1649,7 @@ async function askAI() {
   const notes  = document.getElementById('lab-notes').value.trim();
   const outEl  = document.getElementById('ai-output');
 
-  const systemPrompt = `You are an expert cannabis breeding AI lab partner inside a strategy simulation game. The player is an experienced real-world grower. Be direct, specific, and speak like a knowledgeable breeder — no disclaimers, no filler. Reference the actual plant data provided. Give 2-3 concrete, actionable recommendations. Win condition: Score 450+ AND market value $12,000+.`;
+  const systemPrompt = `You are an expert cannabis breeding AI lab partner inside a strategy simulation game. The player is an experienced real-world grower. Be direct, specific, and speak like a knowledgeable breeder — no disclaimers, no filler. Reference the actual plant data provided. Give 2-3 concrete, actionable recommendations. Win condition: Score 450+ AND market value threshold (higher at early generations: $18k at F0-F1, $14k at F2, $10k at F3+).`;
 
   const gameState = [
     `SEASON ${G.season} | GEN F${G.gen} | LAB LV${G.lab} | CASH ${fmt(G.cash)}`,
