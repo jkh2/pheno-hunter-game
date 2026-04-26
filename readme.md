@@ -21,11 +21,11 @@ The genetic engine models dominant/recessive trait inheritance, phenotype varian
 2. **Run grow seasons** — 5 phases per cycle (Germ → Veg → Flower → Cure → Eval)
 3. **Run phenotype trials** — sharpen hidden trait expression before selecting parents
 4. **Select two parents and breed** — genetic inheritance produces offspring with trait variation, mutation events, special expressions, and defect risk
-5. **Clone keepers** — preserve elite phenotypes before culling
+5. **Clone keepers during VEG** — take cuttings while the plant is in vegetative growth. Cutting yield is based on the plant's genetics (yield + vigor traits). High-vigor plants produce more cuttings per session
 6. **Watch the market** — demand rotates each season (potency vs. bag appeal vs. yield vs. terps)
-7. **Sell licensed cuttings** — generate revenue to upgrade your lab
+7. **Sell licensed cuttings** — draws from your cutting inventory. Inventory is built by cloning during VEG. Button is disabled at zero stock
 8. **Upgrade the lab** — better selection accuracy, more offspring per cross, sharper trials
-9. **Register a Champion** — hit Score 450+ and market value $12,000+ to win
+9. **Register a Champion** — hit Score 450+ and a market value threshold that scales with generation. Early wins are possible but rare
 
 ---
 
@@ -72,7 +72,15 @@ Score = THC×3.5 + Yield×1.05 + Vigor×0.45 + Stability×0.65
       + KeeperBonus + CloneBonus
 ```
 
-**Win condition:** Score ≥ 450 AND market value ≥ $12,000
+**Win condition:** Score ≥ 450 AND market value threshold (scales by generation):
+
+| Generation | Market Value Needed |
+|------------|-------------------|
+| F0 / F1 | $18,000 |
+| F2 | $14,000 |
+| F3+ | $10,000 |
+
+Early generation wins are possible but rare — they require an exceptional plant AND perfect market alignment. A win at F1 earns a special callout on the victory screen. Most players will win around F3–F5.
 
 ---
 
