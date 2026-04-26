@@ -655,16 +655,19 @@ body::before {
             <span class="cost" id="cost-breed">-$445</span>
           </div>
           <div class="action-row">
-            <button class="btn" onclick="saveClone()">CLONE BEST</button>
-            <span class="cost">-$160</span>
+            <button class="btn" id="btn-clone" onclick="saveClone()">CLONE BEST</button>
+            <span class="cost" id="clone-cost">-$160 · +? cuts</span>
           </div>
           <div class="action-row">
             <button class="btn" onclick="markKeeper()">TOGGLE KEEPER</button>
             <span class="cost">FREE</span>
           </div>
           <div class="action-row">
-            <button class="btn gold" onclick="sellCuttings()">SELL CUTTINGS</button>
+            <button class="btn gold" id="btn-sell" onclick="sellCuttings()">SELL CUTTINGS</button>
             <span class="cost pos" id="sell-value">+$0</span>
+          </div>
+          <div style="font-size:10px;color:var(--dim);text-align:right;margin-top:-3px">
+            Inventory: <span id="cutting-count" style="color:var(--green2)">0</span> cuttings
           </div>
           <div class="action-row">
             <button class="btn gold" onclick="upgradeLab()">UPGRADE LAB</button>
@@ -982,7 +985,7 @@ function newGame() {
     selected: [], champion: null,
     log: [{msg:'New game started. Select parents from the seed bank, then breed toward Score 450+.', type:'breed'}],
     phase: 0, market: generateMarket(), totalSold: 0,
-    personalBest: 0
+    personalBest: 0, cuttings: 0
   };
   renderAll();
 }
@@ -1031,6 +1034,41 @@ function renderAll() {
       champBtn.className = 'btn danger';
       champStatus.textContent = `${bestScore}/${WIN_SCORE} pts`;
       champStatus.style.color = 'var(--dim)';
+    }
+  }
+
+  // Update cutting inventory display
+  const cuttingEl = document.getElementById('cutting-count');
+  const sellBtn   = document.getElementById('btn-sell');
+  const cloneBtn  = document.getElementById('btn-clone');
+  const cloneCost = document.getElementById('clone-cost');
+  if (cuttingEl) cuttingEl.textContent = G.cuttings || 0;
+
+  // Clone button — veg phase only, count based on best plant genetics
+  if (cloneBtn && cloneCost) {
+    const best = getRanked()[0];
+    const cutCount = best ? Math.floor(5 + (best.traits.yield/100)*8 + (best.traits.vigor/100)*5) : 0;
+    if (G.phase === 1) {
+      cloneBtn.disabled = false;
+      cloneBtn.title = '';
+      cloneCost.textContent = `-$160 · +${cutCount} cuts`;
+      cloneCost.style.color = 'var(--green)';
+    } else {
+      cloneBtn.disabled = true;
+      cloneBtn.title = 'Cuttings can only be taken during VEG phase';
+      cloneCost.textContent = 'VEG ONLY';
+      cloneCost.style.color = 'var(--dimmer)';
+    }
+  }
+
+  // Sell button — disabled at 0 inventory
+  if (sellBtn) {
+    if (!G.cuttings || G.cuttings < 1) {
+      sellBtn.disabled = true;
+      sellBtn.title = 'No cuttings — clone your best plant during VEG phase first';
+    } else {
+      sellBtn.disabled = false;
+      sellBtn.title = '';
     }
   }
 
@@ -1489,10 +1527,16 @@ function breedSelected() {
 function saveClone() {
   const best = getRanked()[0];
   if (!best) return;
-  if (G.cash < 160) { addLog('Need $160 to save a clone.','event'); renderLog(); return; }
+  if (G.phase !== 1) {
+    addLog('Cuttings can only be taken during VEG phase.','event');
+    renderLog(); return;
+  }
+  if (G.cash < 160) { addLog('Need $160 to take cuttings.','event'); renderLog(); return; }
+  const cutCount = Math.floor(5 + (best.traits.yield/100)*8 + (best.traits.vigor/100)*5);
   G.cash -= 160;
+  G.cuttings = (G.cuttings||0) + cutCount;
   G.plants = G.plants.map(p => p.id===best.id ? {...p, cloneSaved:true} : p);
-  addLog(`Clone preserved: ${best.name}.`, 'breed');
+  addLog(`Cuttings taken from ${best.name} in VEG: +${cutCount} cuttings (yield ${Math.round(best.traits.yield)}, vigor ${Math.round(best.traits.vigor)}). Inventory: ${G.cuttings} total.`, 'breed');
   renderAll();
 }
 
@@ -1507,10 +1551,15 @@ function markKeeper() {
 function sellCuttings() {
   const best = getRanked()[0];
   if (!best) return;
+  if (!G.cuttings || G.cuttings < 1) {
+    addLog('No cuttings in inventory — clone your best plant first.','event');
+    renderLog(); return;
+  }
   const rev = marketValue(best, G.gen, G.market.bonus);
   G.cash += rev;
+  G.cuttings--;
   G.totalSold = (G.totalSold||0) + rev;
-  addLog(`Sold cuttings from ${best.name}: ${fmt(rev)}.`, 'breed');
+  addLog(`Sold 1 cutting from ${best.name}: ${fmt(rev)}. ${G.cuttings} cuttings remaining.`, 'breed');
   renderAll();
 }
 
