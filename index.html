@@ -200,37 +200,14 @@ body::before {
 
 /* ── GROW VISUAL ── */
 .grow-visual {
-  height: 100px;
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 4px;
   overflow: hidden;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding: 8px 12px;
-  gap: 5px;
   margin-bottom: 8px;
-  position: relative;
+  cursor: crosshair;
 }
-.grow-visual::before {
-  content: 'GROW ROOM';
-  position: absolute;
-  top: 6px; left: 8px;
-  font-size: 9px;
-  color: var(--dimmer);
-  letter-spacing: 2px;
-}
-.light-bar {
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, transparent 5%, #f0e080 20%, #fff8c0 50%, #f0e080 80%, transparent 95%);
-  opacity: 0.6;
-}
-.plant-viz { display: flex; flex-direction: column; align-items: center; transition: all 0.4s; }
-.p-stem { background: #2d6820; border-radius: 1px; width: 4px; transition: height 0.4s; }
-.p-bud  { border-radius: 50%; margin-bottom: 2px; transition: all 0.4s; }
+.grow-visual canvas { display: block; width: 100%; height: 240px; }
 
 /* ── TABS ── */
 .tab-bar { display: flex; gap: 4px; margin-bottom: 8px; }
@@ -563,7 +540,10 @@ body::before {
 }
 .win-details { color: var(--green2); font-size: 13px; line-height: 1.8; margin-bottom: 20px; }
 
-/* ── HINT ── */
+@keyframes champblink { 0%,100%{opacity:1;border-color:#7a3010} 50%{opacity:0.6;border-color:#f09050} }
+@keyframes champglow  { 0%,100%{opacity:1;border-color:var(--gold);box-shadow:0 0 8px rgba(240,180,20,0.3)} 50%{opacity:0.8;border-color:var(--gold2);box-shadow:0 0 16px rgba(240,200,60,0.5)} }
+.btn.danger.pb-beat { animation: champblink 1.2s infinite; border-color:#e07030; color:#f0a060; }
+.btn.danger.win-ready { animation: champglow 0.9s infinite; border-color:var(--gold); color:var(--gold2); background:#1a1200; }
 .hint { font-size: 10px; color: var(--dimmer); margin-top: 5px; letter-spacing: 0.5px; }
 .hint.ready { color: var(--green); }
 
@@ -624,7 +604,7 @@ body::before {
     <!-- LEFT COLUMN -->
     <div>
       <div class="grow-visual" id="grow-visual">
-        <div class="light-bar"></div>
+        <canvas id="grow-canvas"></canvas>
       </div>
 
       <div class="tab-bar">
@@ -690,9 +670,11 @@ body::before {
             <button class="btn gold" onclick="upgradeLab()">UPGRADE LAB</button>
             <span class="cost" id="cost-lab">-$1,450</span>
           </div>
+          <div id="lab-stats" style="background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:7px 8px;margin-top:2px;display:grid;grid-template-columns:1fr 1fr;gap:3px 10px;font-size:10px;color:var(--dim)">
+          </div>
           <div class="action-row">
-            <button class="btn danger" onclick="registerChampion()">REGISTER CHAMPION</button>
-            <span class="cost" style="color:var(--gold)">WIN CHECK</span>
+            <button class="btn danger" id="btn-champ" onclick="registerChampion()">REGISTER CHAMPION</button>
+            <span class="cost" style="color:var(--gold)" id="champ-status">WIN CHECK</span>
           </div>
         </div>
       </div>
@@ -999,7 +981,8 @@ function newGame() {
     plants: CULTIVARS.map(c => makePlant(c, 0)),
     selected: [], champion: null,
     log: [{msg:'New game started. Select parents from the seed bank, then breed toward Score 450+.', type:'breed'}],
-    phase: 0, market: generateMarket(), totalSold: 0
+    phase: 0, market: generateMarket(), totalSold: 0,
+    personalBest: 0
   };
   renderAll();
 }
@@ -1019,9 +1002,38 @@ function showBanner(msg, type='event') {
 function renderAll() {
   document.getElementById('stat-season').textContent = G.season;
   document.getElementById('stat-cash').textContent   = fmt(G.cash);
-  const best = getRanked()[0];
-  document.getElementById('stat-best').textContent   = best ? score(best) : '—';
+  const ranked = getRanked(), best = ranked[0];
+  const bestScore = best ? score(best) : 0;
+  document.getElementById('stat-best').textContent   = bestScore || '—';
   document.getElementById('stat-gen').textContent    = 'F' + G.gen;
+
+  // Track personal best and update champion button
+  const WIN_SCORE = 450, WIN_MV = 12000;
+  const mv = best ? marketValue(best, G.gen, G.market.bonus) : 0;
+  const champBtn    = document.getElementById('btn-champ');
+  const champStatus = document.getElementById('champ-status');
+  if (best) {
+    const newBest = bestScore > G.personalBest;
+    if (newBest) G.personalBest = bestScore;
+    if (bestScore >= WIN_SCORE && mv >= WIN_MV) {
+      champBtn.className = 'btn danger win-ready';
+      champStatus.textContent = '★ CHAMPION READY';
+      champStatus.style.color = 'var(--gold)';
+    } else if (bestScore >= WIN_SCORE) {
+      champBtn.className = 'btn danger win-ready';
+      champStatus.textContent = `Score ✓ · Need ${fmt(WIN_MV)} MV`;
+      champStatus.style.color = 'var(--gold)';
+    } else if (bestScore > 380 || newBest) {
+      champBtn.className = 'btn danger pb-beat';
+      champStatus.textContent = `PB: ${G.personalBest} · Goal: ${WIN_SCORE}`;
+      champStatus.style.color = 'var(--amber)';
+    } else {
+      champBtn.className = 'btn danger';
+      champStatus.textContent = `${bestScore}/${WIN_SCORE} pts`;
+      champStatus.style.color = 'var(--dim)';
+    }
+  }
+
   renderPhases(); renderPlants(); renderBest(); renderGrowVisual(); renderMarket(); renderLog(); updateCosts();
 }
 
@@ -1109,25 +1121,263 @@ function renderBest() {
   document.getElementById('sell-value').textContent = '+' + fmt(mv);
 }
 
+/* ════════════════════════════════════════════
+   GROW ROOM CANVAS ENGINE
+   ════════════════════════════════════════════ */
+
+let GR = { selectedPlant: null };
+
+function plantColor(p) {
+  const r = p.traits.resin / 100;
+  const isSativa = p.type.includes('Sativa');
+  const isIndica = p.type.includes('Indica') && !p.type.includes('Hybrid');
+  const g  = isIndica ? Math.floor(110+r*40) : Math.floor(90+r*50);
+  const gr = isSativa ? Math.floor(170+r*30) : Math.floor(140+r*40);
+  return `rgba(${g-20},${gr},${g-40},1)`;
+}
+
+function budColor(p, phase) {
+  const r = p.traits.resin / 100;
+  if (phase >= 3) {
+    return `rgba(${Math.floor(170+r*40)},${Math.floor(130+r*30)},${Math.floor(18+r*20)},1)`;
+  }
+  const g = Math.floor(70+r*60), gr = Math.floor(130+r*60);
+  return `rgba(${g-10},${gr},${g-30},1)`;
+}
+
+function trichomeColor(p) {
+  const r = p.traits.resin / 100;
+  return `rgba(255,255,${Math.floor(190+r*55)},${0.35+r*0.45})`;
+}
+
 function renderGrowVisual() {
-  const viz = document.getElementById('grow-visual');
-  const existing = viz.querySelectorAll('.plant-viz');
-  existing.forEach(e => e.remove());
-  getRanked().slice(0, 14).forEach(p => {
-    const h = 16 + G.phase*16 + p.traits.vigor*0.35;
-    const w = 2 + p.traits.yield*0.035;
-    const div = document.createElement('div');
-    div.className = 'plant-viz';
-    div.style.opacity = 0.45 + G.phase*0.11;
-    let bud = '';
-    if (G.phase >= 3) {
-      const bs = 5 + p.traits.resin*0.07;
-      const bc = G.phase>=4 ? '#7a5a18' : '#2a6818';
-      bud = `<div class="p-bud" style="width:${bs}px;height:${bs}px;background:${bc}"></div>`;
+  const canvas = document.getElementById('grow-canvas');
+  if (!canvas) return;
+  const container = document.getElementById('grow-visual');
+  const W = container.offsetWidth || 580;
+  const H = 240;
+  canvas.width  = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  const plants  = getRanked().slice(0, 14);
+  const n       = plants.length;
+  if (!n) return;
+
+  const floorY = H * 0.87;
+  const ceilY  = H * 0.05;
+  const slotW  = (W - 40) / n;
+
+  ctx.fillStyle = '#040a04';
+  ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = '#05100a';
+  ctx.fillRect(10, ceilY, W-20, floorY - ceilY);
+  ctx.fillStyle = '#0a160a';
+  ctx.fillRect(10, floorY, W-20, H - floorY - 2);
+
+  ctx.strokeStyle = '#0a1a0a';
+  ctx.lineWidth = 0.5;
+  for (let x=10; x<W-10; x+=36) {
+    ctx.beginPath(); ctx.moveTo(x,ceilY); ctx.lineTo(x,floorY); ctx.stroke();
+  }
+  for (let y=ceilY; y<floorY; y+=36) {
+    ctx.beginPath(); ctx.moveTo(10,y); ctx.lineTo(W-10,y); ctx.stroke();
+  }
+
+  const lightY = ceilY + 8;
+  for (let i=0; i<n; i++) {
+    const p  = plants[i];
+    const lx = 20 + i*slotW + slotW/2;
+    const intensity = 0.45 + (G.phase/4)*0.3 + (p.traits.vigor/100)*0.18;
+    const grad = ctx.createRadialGradient(lx, lightY, 1, lx, lightY, slotW*0.9);
+    grad.addColorStop(0,   `rgba(255,245,180,${intensity*0.22})`);
+    grad.addColorStop(0.4, `rgba(255,220,100,${intensity*0.07})`);
+    grad.addColorStop(1,   'rgba(0,0,0,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(lx - slotW, lightY, slotW*2, floorY - lightY);
+    ctx.fillStyle = `rgba(255,245,170,${0.65+intensity*0.2})`;
+    ctx.fillRect(lx - slotW*0.38, lightY-3, slotW*0.76, 4);
+    ctx.fillStyle = 'rgba(255,255,210,0.9)';
+    ctx.fillRect(lx - slotW*0.32, lightY-2, slotW*0.64, 2);
+  }
+
+  const potY = floorY - 11;
+
+  plants.forEach((p, i) => {
+    const cx = 20 + i*slotW + slotW/2;
+    const isSelected = GR.selectedPlant === i;
+
+    const isSativa = p.type.includes('Sativa') && !p.type.includes('Indica');
+    const isIndica = p.type.includes('Indica') && !p.type.includes('Hybrid');
+
+    const baseH    = 14 + (p.traits.vigor/100)*30;
+    const vegGrow  = G.phase >= 1 ? (p.traits.vigor/100)*45 * Math.min(G.phase-0, 1) : 0;
+    const florGrow = G.phase >= 2 ? (p.traits.vigor/100)*38 * Math.min(G.phase-1, 1) : 0;
+    const plantH   = Math.min(baseH + vegGrow + florGrow, floorY - ceilY - 52);
+    const stemBase = potY - 10;
+    const stemTop  = stemBase - plantH;
+    const stemW    = isSativa ? 2 : isIndica ? 3.5 : 2.8;
+    const spread   = isSativa ? 0.88 : isIndica ? 0.54 : 0.70;
+    const pc       = plantColor(p);
+
+    if (isSelected) {
+      ctx.strokeStyle = 'rgba(168,216,120,0.12)';
+      ctx.lineWidth   = slotW * 0.82;
+      ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(cx, ceilY); ctx.lineTo(cx, floorY); ctx.stroke();
     }
-    div.innerHTML = `${bud}<div class="p-stem" style="height:${h}px;width:${w}px"></div>`;
-    viz.appendChild(div);
+
+    if (G.phase === 0) {
+      if (plantH > 3) {
+        ctx.fillStyle = '#1a4a10';
+        ctx.beginPath();
+        ctx.ellipse(cx, stemBase-2, 4, 2.5, 0, 0, Math.PI*2);
+        ctx.fill();
+        ctx.fillStyle = '#2a6018';
+        ctx.fillRect(cx-1, stemBase-plantH, 2, plantH);
+        if (plantH > 7) {
+          ctx.fillStyle = '#3a8020';
+          ctx.beginPath();
+          ctx.ellipse(cx, stemBase-plantH, 5, 2.5, -0.3, 0, Math.PI*2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.ellipse(cx, stemBase-plantH, 5, 2.5,  0.3, 0, Math.PI*2);
+          ctx.fill();
+        }
+      }
+    } else {
+      ctx.strokeStyle = '#1a4010';
+      ctx.lineWidth   = stemW;
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.moveTo(cx, stemBase);
+      if (isSativa) {
+        const drift = (p.traits.vigor - 50) * 0.07;
+        ctx.bezierCurveTo(cx+drift, stemBase-plantH*0.35, cx-drift, stemBase-plantH*0.7, cx, stemTop);
+      } else {
+        ctx.lineTo(cx, stemTop);
+      }
+      ctx.stroke();
+
+      const nodeCount = Math.floor(3 + (p.traits.vigor/100)*3.5 + (G.phase-1)*1.8);
+      const nodeSpacing = plantH / Math.max(nodeCount, 1);
+
+      for (let ni=0; ni<nodeCount; ni++) {
+        const ny       = stemBase - (ni+0.5)*nodeSpacing;
+        const maturity = Math.min(G.phase, 2) / 2;
+        const leafSz   = (slotW*spread*0.38) * (0.45 + ni/nodeCount*0.55) * maturity;
+        const side     = ni%2===0 ? 1 : -1;
+        const branchL  = leafSz * (0.55 + (p.traits.vigor/100)*0.45);
+
+        if (leafSz > 2) {
+          ctx.fillStyle = pc;
+          ctx.beginPath();
+          ctx.ellipse(cx + side*branchL*0.5, ny, leafSz*0.88, leafSz*0.42, side*0.4, 0, Math.PI*2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.ellipse(cx - side*branchL*0.45, ny + nodeSpacing*0.18, leafSz*0.72, leafSz*0.35, -side*0.35, 0, Math.PI*2);
+          ctx.fill();
+        }
+
+        const isUpperNode = ni >= nodeCount - Math.ceil(nodeCount*0.55);
+        if (G.phase >= 2 && isUpperNode) {
+          const budProg = Math.min((G.phase-2)*1.3, 1);
+          const budSz   = (4 + (p.traits.resin/100)*11 + (p.traits.yield/100)*5) * budProg;
+          const bc      = budColor(p, G.phase);
+
+          ctx.fillStyle = bc;
+          ctx.beginPath();
+          ctx.ellipse(cx + side*branchL*0.28, ny, budSz*0.52, budSz*0.78, 0, 0, Math.PI*2);
+          ctx.fill();
+
+          if (ni === nodeCount-1) {
+            ctx.fillStyle = bc;
+            ctx.beginPath();
+            ctx.ellipse(cx, stemTop + budSz*0.28, budSz*0.62, budSz*1.05, 0, 0, Math.PI*2);
+            ctx.fill();
+          }
+
+          if (p.traits.resin > 68 && budProg > 0.45) {
+            ctx.fillStyle = trichomeColor(p);
+            const tCount = Math.floor((p.traits.resin/100)*7);
+            for (let t=0; t<tCount; t++) {
+              const tx = cx + side*branchL*0.28 + (Math.random()-0.5)*budSz*1.1;
+              const ty = ny + (Math.random()-0.5)*budSz*1.1;
+              ctx.beginPath(); ctx.arc(tx, ty, 0.9, 0, Math.PI*2); ctx.fill();
+            }
+          }
+        }
+      }
+
+      if (p.special && p.special.includes('purple fade') && G.phase >= 2) {
+        const pFade = Math.min((G.phase-2)*0.9, 1);
+        ctx.fillStyle = `rgba(100,50,140,${pFade*0.22})`;
+        ctx.beginPath();
+        ctx.ellipse(cx, stemTop + plantH*0.2, slotW*spread*0.48, plantH*0.28, 0, 0, Math.PI*2);
+        ctx.fill();
+      }
+    }
+
+    const potW = Math.min(slotW*0.52, 32);
+    ctx.fillStyle = '#181006';
+    ctx.fillRect(cx-potW/2, potY-11, potW, 11);
+    ctx.fillStyle = '#201408';
+    ctx.fillRect(cx-potW*0.38, potY, potW*0.76, 4);
+    ctx.fillStyle = G.phase>=2 ? '#16100a' : '#201808';
+    ctx.fillRect(cx-potW/2+1, potY-10, potW-2, 4);
+
+    if (isSelected) {
+      ctx.strokeStyle = '#a8d878';
+      ctx.lineWidth   = 1;
+      ctx.setLineDash([3,3]);
+      ctx.strokeRect(cx - slotW*0.44, stemTop-6, slotW*0.88, floorY-stemTop);
+      ctx.setLineDash([]);
+
+      ctx.fillStyle   = '#080f08';
+      ctx.strokeStyle = '#a8d878';
+      ctx.lineWidth   = 0.5;
+      const lblW = 88, lblH = 26;
+      let lblX = cx + slotW*0.38;
+      if (lblX+lblW > W-10) lblX = cx - slotW*0.38 - lblW;
+      const lblY = Math.max(stemTop - 32, ceilY+4);
+      ctx.fillRect(lblX, lblY, lblW, lblH);
+      ctx.strokeRect(lblX, lblY, lblW, lblH);
+      ctx.fillStyle = '#c8e8a8';
+      ctx.font = '8px Courier New';
+      ctx.textAlign = 'left';
+      ctx.fillText(p.name.slice(0,15), lblX+4, lblY+10);
+      ctx.fillStyle = '#80d840';
+      ctx.fillText(`${score(p)}pts  ${p.traits.thc.toFixed(1)}%THC`, lblX+4, lblY+20);
+    }
+
+    ctx.fillStyle = '#3a5a3a';
+    ctx.font = '8px Courier New';
+    ctx.textAlign = 'center';
+    const lbl = p.name.length > 9 ? p.name.slice(0,8)+'…' : p.name;
+    ctx.fillText(lbl, cx, floorY + 10);
   });
+
+  ctx.fillStyle = '#040a04';
+  ctx.fillRect(0, 0, 10, H);
+  ctx.fillRect(W-10, 0, 10, H);
+  ctx.fillStyle = '#2a4a2a';
+  ctx.font = '8px Courier New';
+  ctx.textAlign = 'left';
+  ctx.fillText('GROW ROOM · ' + ['GERM','VEG','FLOWER','CURE','EVAL'][G.phase], 14, ceilY+11);
+  ctx.textAlign = 'right';
+  ctx.fillText('LAB LV' + G.lab + ' · ' + plants.length + ' PLANTS', W-14, ceilY+11);
+
+  canvas.onclick = (e) => {
+    const rect   = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const mx     = (e.clientX - rect.left) * scaleX;
+    const slotW2 = (canvas.width-40) / plants.length;
+    const idx    = Math.floor((mx-20) / slotW2);
+    if (idx >= 0 && idx < plants.length) {
+      GR.selectedPlant = GR.selectedPlant === idx ? null : idx;
+      renderGrowVisual();
+    }
+  };
 }
 
 function renderMarket() {
@@ -1151,6 +1401,24 @@ function updateCosts() {
   document.getElementById('cost-grow').textContent  = `-$${800+G.season*50}`;
   document.getElementById('cost-breed').textContent = '-$' + (480 - G.lab*35);
   document.getElementById('cost-lab').textContent   = '-$' + (900 + G.lab*550);
+
+  const nextLab     = G.lab + 1;
+  const offspring   = 6 + G.lab*2;
+  const offspringNx = 6 + nextLab*2;
+  const noise       = Math.max(1.5, 5.5 - G.lab*0.45).toFixed(1);
+  const noiseNx     = Math.max(1.5, 5.5 - nextLab*0.45).toFixed(1);
+  const breedCost   = 480 - G.lab*35;
+  const breedCostNx = 480 - nextLab*35;
+  const spikeChance = Math.round((0.11 + G.lab*0.025)*100);
+  const spikeNx     = Math.round((0.11 + nextLab*0.025)*100);
+
+  document.getElementById('lab-stats').innerHTML = `
+    <div style="color:var(--green);grid-column:1/-1;font-size:9px;letter-spacing:1px;margin-bottom:2px">LAB LV${G.lab} STATS → LV${nextLab} AFTER UPGRADE</div>
+    <div>Offspring/cross</div><div style="color:var(--green2)">${offspring} → <span style="color:var(--gold)">${offspringNx}</span></div>
+    <div>Trial accuracy</div><div style="color:var(--green2)">${noise} noise → <span style="color:var(--gold)">${noiseNx}</span></div>
+    <div>Breed cost</div><div style="color:var(--green2)">${fmt(breedCost)} → <span style="color:var(--gold)">${fmt(breedCostNx)}</span></div>
+    <div>Spike chance</div><div style="color:var(--green2)">${spikeChance}% → <span style="color:var(--gold)">${spikeNx}%</span></div>
+  `;
 }
 
 /* ── ACTIONS ── */
@@ -1249,9 +1517,13 @@ function sellCuttings() {
 function upgradeLab() {
   const cost = 900 + G.lab*550;
   if (G.cash < cost) { addLog(`Need ${fmt(cost)} to upgrade lab.`,'event'); renderLog(); return; }
+  const prevOffspring = 6 + G.lab*2;
+  const prevNoise     = Math.max(1.5, 5.5 - G.lab*0.45).toFixed(1);
   G.cash -= cost;
   G.lab++;
-  addLog(`Lab → Level ${G.lab}. Better selection, more offspring, sharper trials.`, 'breed');
+  const newOffspring  = 6 + G.lab*2;
+  const newNoise      = Math.max(1.5, 5.5 - G.lab*0.45).toFixed(1);
+  addLog(`Lab upgraded to Level ${G.lab}: offspring ${prevOffspring}→${newOffspring} per cross, trial noise ${prevNoise}→${newNoise}, breed cost now ${fmt(480-G.lab*35)}.`, 'breed');
   renderAll();
 }
 
@@ -1259,20 +1531,26 @@ function registerChampion() {
   const best = getRanked()[0];
   if (!best) return;
   const sc = score(best), mv = marketValue(best, G.gen, G.market.bonus);
+  const WIN_SCORE = 450, WIN_MV = 12000;
   G.champion = best;
-  addLog(`Champion registered: ${best.name}, Score ${sc}.`, 'win');
-  if (sc >= 450 && mv >= 750000) {
+  addLog(`Champion registered: ${best.name}, Score ${sc}, Value ${fmt(mv)}.`, 'win');
+  if (sc >= WIN_SCORE && mv >= WIN_MV) {
     document.getElementById('win-details').innerHTML =
       `<strong>${best.name}</strong><br>
-       Score: ${sc} / 450 ✓<br>
-       Market Value: ${fmt(mv)} / $750k ✓<br>
+       Score: ${sc} / ${WIN_SCORE} ✓<br>
+       Market Value: ${fmt(mv)} ✓<br>
        Generation: F${best.gen} · Season ${G.season}<br>
        Lab Level: ${G.lab}<br>
        Total Revenue: ${fmt(G.totalSold)}<br><br>
        This cultivar is now part of cannabis history.`;
     document.getElementById('win-overlay').className = 'win-overlay show';
   } else {
-    addLog(`Score ${sc}/450 · Value ${fmt(mv)}/$750k. Keep pushing.`,'event');
+    const scoreGap = Math.max(0, WIN_SCORE - sc);
+    const mvGap    = Math.max(0, WIN_MV - mv);
+    let feedback = [];
+    if (scoreGap > 0) feedback.push(`Need +${scoreGap} more score points`);
+    if (mvGap > 0)    feedback.push(`Need ${fmt(mvGap)} more market value — sell in a primary demand season`);
+    addLog(feedback.join(' · '), 'event');
   }
   renderAll();
 }
@@ -1317,7 +1595,7 @@ async function askAI() {
   const notes  = document.getElementById('lab-notes').value.trim();
   const outEl  = document.getElementById('ai-output');
 
-  const systemPrompt = `You are an expert cannabis breeding AI lab partner inside a strategy simulation game. The player is an experienced real-world grower. Be direct, specific, and speak like a knowledgeable breeder — no disclaimers, no filler. Reference the actual plant data provided. Give 2-3 concrete, actionable recommendations. Win condition: Score 450+ AND market value $750k+.`;
+  const systemPrompt = `You are an expert cannabis breeding AI lab partner inside a strategy simulation game. The player is an experienced real-world grower. Be direct, specific, and speak like a knowledgeable breeder — no disclaimers, no filler. Reference the actual plant data provided. Give 2-3 concrete, actionable recommendations. Win condition: Score 450+ AND market value $12,000+.`;
 
   const gameState = [
     `SEASON ${G.season} | GEN F${G.gen} | LAB LV${G.lab} | CASH ${fmt(G.cash)}`,
@@ -1785,6 +2063,7 @@ function closeStrainBrowser() {
 }
 
 /* ── INIT ── */
+window.addEventListener('resize', () => renderGrowVisual());
 newGame();
 </script>
 </body>
