@@ -985,7 +985,7 @@ function newGame() {
     selected: [], champion: null,
     log: [{msg:'New game started. Select parents from the seed bank, then breed toward Score 450+.', type:'breed'}],
     phase: 0, market: generateMarket(), totalSold: 0,
-    personalBest: 0, cuttings: 0
+    personalBest: 0, cuttings: 5
   };
   renderAll();
 }
@@ -1440,7 +1440,9 @@ function renderLog() {
 }
 
 function updateCosts() {
-  document.getElementById('cost-grow').textContent  = `-$${800+G.season*50}`;
+  const phaseCosts = [120, 150, 180, 80, 50];
+  const currentPhaseCost = phaseCosts[G.phase] + G.season * 10;
+  document.getElementById('cost-grow').textContent = `-$${currentPhaseCost} (${['GERM','VEG','FLOWER','CURE','EVAL'][G.phase]})`;
   document.getElementById('cost-breed').textContent = '-$' + (480 - G.lab*35);
   document.getElementById('cost-lab').textContent   = '-$' + (900 + G.lab*550);
 
@@ -1478,10 +1480,11 @@ function switchTab(tab, el) {
 }
 
 function runGrow() {
-  const cost = 800 + G.season*50;
-  if (G.cash < cost) { addLog('Not enough cash for a grow season.','event'); renderLog(); return; }
+  const phaseCosts = [120, 150, 180, 80, 50]; // GERM, VEG, FLOWER, CURE, EVAL
+  const cost = phaseCosts[G.phase] + G.season * 10;
+  if (G.cash < cost) { addLog(`Not enough cash for ${['GERM','VEG','FLOWER','CURE','EVAL'][G.phase]} phase — need ${fmt(cost)}.`,'event'); renderLog(); return; }
   G.cash -= cost;
-  G.phase = Math.min(G.phase+1, 4);
+  G.phase = Math.min(G.phase + 1, 4);
   if (G.phase === 4) {
     G.season++;
     G.market = generateMarket();
@@ -1494,7 +1497,7 @@ function runGrow() {
     }
     addLog(`Season ${G.season-1} complete. New market loaded.`, 'breed');
   } else {
-    addLog(`Phase → ${PHASES[G.phase]}. Cash: ${fmt(G.cash)}.`);
+    addLog(`Phase → ${['GERM','VEG','FLOWER','CURE','EVAL'][G.phase]}. Cash: ${fmt(G.cash)}.`);
   }
   renderAll();
 }
