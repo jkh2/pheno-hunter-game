@@ -1,16 +1,35 @@
 # 🌿 Pheno Hunter — Player's Manual
 
-> You're not a gardener. You're a breeder. Your job is to hunt elite genetics, stabilize a champion line, and release a cultivar worth $750,000 to the market.
+> You're not a gardener. You're a breeder. Your job is to hunt elite genetics, stabilize a champion line, and release a cultivar the market will pay top dollar for.
 
 ---
 
 ## The Goal
 
-Breed a plant that hits **Score 450 or higher** AND has a **Market Value of $750,000+**.
+Breed a plant that hits **Score 450 or higher** AND has a **Market Value of $12,000+**.
 
-When you hit both thresholds, click **Register Champion** and you win.
+When you hit both thresholds, the Register Champion button will glow gold. Click it and you win.
 
 It takes several generations and smart decision-making to get there. Don't expect to win on your first run.
+
+---
+
+## The Grow Room
+
+The grow room is a live canvas rendering of your current seed bank. It sits at the top of the left column and updates every time your game state changes.
+
+Plants render differently based on their actual trait values:
+- **Sativas** stretch tall with a natural lean and wide canopy spread
+- **Indicas** stay compact and squat with thicker stems
+- **High vigor** plants are taller than low vigor plants in the same room
+- **High yield** plants have a wider canopy spread
+- **High resin** plants show trichome sparkle at flower and cure stages
+- The **purple fade** special trait shows as a visible purple tint on the canopy during flowering
+- Buds shift from green to amber/gold at the cure phase
+
+**Click any plant in the grow room** to select and inspect it. A dashed selection box appears with the plant's name, score, and THC value. Clicking again deselects.
+
+The room header shows your current phase and lab level. The floor label under each plant shows a shortened name.
 
 ---
 
@@ -157,22 +176,35 @@ Sells cuttings from your top-ranked plant at current market value. This is your 
 ### ⬆️ Upgrade Lab
 **Cost:** $1,450 → increases each level
 
-Upgrades your lab to the next level. Each upgrade gives you:
-- More offspring per breeding round
-- More accurate pheno trials (less hidden variance)
-- Slightly higher mutation discovery chance (rare spike events)
-- Cheaper breeding costs
+Upgrades your lab to the next level. The **lab stats panel** directly below this button shows exactly what you're buying — current values on the left, next level values in gold on the right:
 
-**Use when:** You've built up cash and are ready to push into deeper generations. Lab Level 2 is a big jump — prioritize it early.
+| Stat | What it means |
+|------|--------------|
+| **Offspring/cross** | How many plants are produced per breeding round |
+| **Trial accuracy** | Lower noise = pheno trials show truer trait values |
+| **Breed cost** | What you pay to run a breeding round |
+| **Spike chance** | Probability of a rare trait spike in offspring |
+
+After upgrading, the field log entry shows the before/after numbers so you can see exactly what changed.
+
+**Use when:** You've built up cash and are ready to push into deeper generations. Lab Level 2 is the most important upgrade — it meaningfully increases offspring count and trial accuracy. Prioritize it early.
 
 ---
 
 ### 🏆 Register Champion
 **Cost:** Free — triggers win check
 
-Checks if your top plant meets the win conditions (Score 450+ and Market Value $750k+). If it does, you win. If not, it tells you how far off you are.
+Checks if your top plant meets the win conditions (Score 450+ and Market Value $12,000+). The button has three states that tell you where you stand:
 
-**Use when:** Your best score is approaching 400+ and your market value is climbing. Check often — you might be closer than you think.
+| Button State | What it means |
+|-------------|--------------|
+| **Dim / static** | Early game — shows your current score vs the 450 goal |
+| **Blinking amber** | You've beaten your personal best or score is above 380 — getting close |
+| **Glowing gold ★ CHAMPION READY** | Both conditions met — register now |
+
+When you don't qualify, the button tells you exactly what's missing — how many score points you need, or that you need more market value and should sell in a primary demand season.
+
+**Use when:** The button is glowing gold. Don't ignore it — that's the game telling you you've won.
 
 ---
 
@@ -255,8 +287,8 @@ High Resistance and low Difficulty scores protect you from event damage. Unstabl
 **Late game (F5+):**
 - Your best plants should be scoring 350–420. You need one more push.
 - Look for the spike event in breeding — occasionally one trait jumps hard. That's your champion candidate.
-- Clone it immediately. Sell cuttings in the right market season to push market value past $750k.
-- Register the champion.
+- Clone it immediately. Sell cuttings in the right market season to push market value past $12,000.
+- Watch for the Register Champion button to glow gold — that's your signal.
 
 ---
 
@@ -320,8 +352,8 @@ Score = THC×3.5 + Yield×1.05 + Vigor×0.45 + Stability×0.65
       + CloneBonus (12pts)
 ```
 
-Maximum theoretical score: ~520. Win threshold: 450.
+Maximum theoretical score: ~520. Win threshold: 450 pts + $12,000 market value.
 
 ---
 
-*Pheno Hunter v1.0 · Sentinel AI Systems · [jkh2.github.io/pheno-hunter-game](https://jkh2.github.io/pheno-hunter-game)*
+*Pheno Hunter v1.1 · Sentinel AI Systems · [jkh2.github.io/pheno-hunter-game](https://jkh2.github.io/pheno-hunter-game)*
