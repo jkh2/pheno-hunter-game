@@ -3,7 +3,7 @@
 
 > Breed the perfect cultivar. Select parents, chase elite phenotypes across generations, and race the market to register a champion. Multi-AI lab partner included — bring your own key.
 
-**Live:** [jkh2.github.io/pheno-hunter-game](https://jkh2.github.io/pheno-hunter-game) · 📖 [Player Manual](player-manual.md)
+**Live:** [jkh2.github.io/pheno-hunter-game](https://jkh2.github.io/pheno-hunter-game) · 📖 [Player Manual](MANUAL.md)
 
 ---
 
@@ -25,7 +25,7 @@ The genetic engine models dominant/recessive trait inheritance, phenotype varian
 6. **Watch the market** — demand rotates each season (potency vs. bag appeal vs. yield vs. terps)
 7. **Sell licensed cuttings** — generate revenue to upgrade your lab
 8. **Upgrade the lab** — better selection accuracy, more offspring per cross, sharper trials
-9. **Register a Champion** — hit Score 450+ and $750k market value to win
+9. **Register a Champion** — hit Score 450+ and market value $12,000+ to win
 
 ---
 
@@ -72,7 +72,36 @@ Score = THC×3.5 + Yield×1.05 + Vigor×0.45 + Stability×0.65
       + KeeperBonus + CloneBonus
 ```
 
-**Win condition:** Score ≥ 450 AND market value ≥ $750,000
+**Win condition:** Score ≥ 450 AND market value ≥ $12,000
+
+---
+
+## Grow Room
+
+The grow room renders a live canvas view of your current seed bank. Plants visually evolve through all 5 growth phases based on their actual trait values:
+
+- Sativas stretch tall with a natural stem curve and wide canopy spread
+- Indicas stay squat and dense with thick stems
+- High vigor plants are taller, high yield plants have wider canopy
+- High resin plants show trichome sparkle at flower and cure stages
+- Purple fade special trait shows as a visible tint on the canopy
+- Buds shift from green to amber/gold at cure stage
+- Click any plant in the room to select and inspect it
+
+---
+
+## Lab Upgrade Stats
+
+The lab stats panel sits directly below the Upgrade Lab button and shows exactly what each upgrade changes — current values on the left, next level values in gold on the right:
+
+| Stat | What changes |
+|------|-------------|
+| **Offspring/cross** | More plants produced per breeding round |
+| **Trial accuracy** | Lower noise = truer trait expression in pheno trials |
+| **Breed cost** | Cost to run a breeding round decreases |
+| **Spike chance** | Higher chance of a trait spike in offspring |
+
+The field log entry after each upgrade also spells out the before/after numbers so you always know exactly what you bought.
 
 ---
 
@@ -121,11 +150,12 @@ Single `index.html` — no build step, no dependencies, no framework.
 
 ## Tech
 
-- Vanilla JS, HTML5, CSS3
+- Vanilla JS, HTML5, CSS3, Canvas API
 - Google Fonts: Share Tech Mono + Rajdhani
 - No npm, no build, no framework
 - localStorage save/load
 - Multi-provider AI via direct fetch (Claude, Grok, Gemini, local Ollama)
+- Live grow room rendered in HTML5 Canvas
 
 ---
 
