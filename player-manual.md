@@ -6,11 +6,17 @@
 
 ## The Goal
 
-Breed a plant that hits **Score 450 or higher** AND has a **Market Value of $12,000+**.
+Breed a plant that hits **Score 450 or higher** AND meets the **market value threshold** for your current generation:
 
-When you hit both thresholds, the Register Champion button will glow gold. Click it and you win.
+| Generation | Market Value Needed |
+|------------|-------------------|
+| F0 / F1 | $18,000 |
+| F2 | $14,000 |
+| F3+ | $10,000 |
 
-It takes several generations and smart decision-making to get there. Don't expect to win on your first run.
+The threshold is higher early in the game to make lightning-strike wins rare but not impossible. If you hit it at F1, the win screen calls it out — that's a badge of honor. Most runs will reach champion status around F3–F5.
+
+When you hit both thresholds, the Register Champion button glows gold. Click it and you win.
 
 ---
 
@@ -147,11 +153,19 @@ Takes your two selected parents and produces offspring. The number of offspring 
 ---
 
 ### 💾 Clone Best
-**Cost:** $160
+**Cost:** $160 · **VEG phase only**
 
-Saves a clone of your current top-ranked plant. Cloned plants survive future culling when you breed — they won't get cut from the gene pool no matter what.
+Takes cuttings from your current top-ranked plant and adds them to your cutting inventory. The number of cuttings you get is based on the plant's genetics:
 
-**Use when:** You find a phenotype with an exceptional trait combination you don't want to lose. Clone before you breed, not after.
+```
+Cuttings = 5 + (Yield × 0.08) + (Vigor × 0.05)
+```
+
+A high-yield, high-vigor plant can produce 15–18 cuttings per session. A weak plant may only yield 5–7. The button label shows the projected count before you click so you always know what you're getting.
+
+**The button grays out outside of VEG phase** — you can only take cuttings while the plant is in active vegetative growth. Plan ahead: if you want inventory before flowering, you need to act during VEG.
+
+**Use when:** You're in VEG phase and have a plant worth selling cuttings from. Clone early and often — your inventory is your income.
 
 ---
 
@@ -165,11 +179,15 @@ Marks your top plant as a keeper. Keeper plants also survive culling. Gives a sm
 ---
 
 ### 💰 Sell Licensed Cuttings
-**Cost:** Free — earns money
+**Cost:** Free — earns money · **Requires cutting inventory**
 
-Sells cuttings from your top-ranked plant at current market value. This is your primary income source. Market value is calculated from score, generation scarcity, defect drag, and current market demand bonus.
+Sells one cutting from your inventory at current market value. Market value is calculated from score, generation scarcity, defect drag, and current market demand bonus.
 
-**Use when:** Your best plant aligns with the current market's primary demand trait. Don't sell into a bad market if you can wait a season.
+**You must have cuttings in inventory to sell.** The button grays out at zero. The inventory counter sits directly below the button so you always know your stock.
+
+Each sale draws down your inventory by 1. When you run out, head back to VEG phase and clone again.
+
+**Use when:** You have cuttings in inventory and the current market's primary demand trait aligns with your best plant. Don't sell into a weak market if you can wait a season — the same cutting is worth more when demand is high.
 
 ---
 
@@ -194,7 +212,7 @@ After upgrading, the field log entry shows the before/after numbers so you can s
 ### 🏆 Register Champion
 **Cost:** Free — triggers win check
 
-Checks if your top plant meets the win conditions (Score 450+ and Market Value $12,000+). The button has three states that tell you where you stand:
+Checks if your top plant meets the win conditions — Score 450+ AND the market value threshold for your current generation. The button has three states that tell you where you stand:
 
 | Button State | What it means |
 |-------------|--------------|
@@ -202,7 +220,17 @@ Checks if your top plant meets the win conditions (Score 450+ and Market Value $
 | **Blinking amber** | You've beaten your personal best or score is above 380 — getting close |
 | **Glowing gold ★ CHAMPION READY** | Both conditions met — register now |
 
-When you don't qualify, the button tells you exactly what's missing — how many score points you need, or that you need more market value and should sell in a primary demand season.
+**Market value threshold by generation:**
+
+| Generation | Required |
+|------------|---------|
+| F0 / F1 | $18,000 |
+| F2 | $14,000 |
+| F3+ | $10,000 |
+
+When you don't qualify, the log tells you exactly what's missing. If you're early in the game and short on market value, it reminds you that the threshold drops at F3+ — so breeding deeper is always a valid path forward.
+
+An F0 or F1 win earns a special `⚡ Early generation win` callout on the victory screen.
 
 **Use when:** The button is glowing gold. Don't ignore it — that's the game telling you you've won.
 
@@ -274,7 +302,8 @@ High Resistance and low Difficulty scores protect you from event damage. Unstabl
 
 **Early game (F0–F1):**
 - Don't breed immediately. Run a pheno trial first to see true trait values.
-- Sell cuttings from your best F0 plant to build cash.
+- **Take cuttings during VEG phase** to build inventory before flowering. High yield and vigor plants give more cuttings.
+- Sell cuttings from your best F0 plant to build cash — but only when market demand aligns.
 - Upgrade the lab to Level 2 before going deep into generations.
 - Look for parents with high stability — it protects your offspring from defects.
 
@@ -287,8 +316,9 @@ High Resistance and low Difficulty scores protect you from event damage. Unstabl
 **Late game (F5+):**
 - Your best plants should be scoring 350–420. You need one more push.
 - Look for the spike event in breeding — occasionally one trait jumps hard. That's your champion candidate.
-- Clone it immediately. Sell cuttings in the right market season to push market value past $12,000.
+- Clone it during VEG immediately. Sell cuttings in the right market season to push market value past $10,000.
 - Watch for the Register Champion button to glow gold — that's your signal.
+- If you're playing a long game and haven't won yet, remember: every generation past F3 the market value threshold stays at $10,000, so patience pays.
 
 ---
 
@@ -356,4 +386,4 @@ Maximum theoretical score: ~520. Win threshold: 450 pts + $12,000 market value.
 
 ---
 
-*Pheno Hunter v1.1 · Sentinel AI Systems · [jkh2.github.io/pheno-hunter-game](https://jkh2.github.io/pheno-hunter-game)*
+*Pheno Hunter v1.2 · Sentinel AI Systems · [jkh2.github.io/pheno-hunter-game](https://jkh2.github.io/pheno-hunter-game)*
